@@ -350,12 +350,12 @@ __interrupt void Cla1Task1 ( void )
 
         #if(TUNNING_ADC == 2)
 
-            AdcValue.Va_G = 0.775*(VaG_HCPL - 2703)/(4096.0 - 2703);
-            AdcValue.Vb_G = 0.745*(VbG_HCPL - 2604)/(4096.0 - 2604);
-            AdcValue.Vc_G = 0.765*(VcG_HCPL - 2694)/(4096.0 - 2694);
-            AdcValue.Ia_inv = 1.52*(IA_INV_LEM - 2061)/(4096.0 - 2061);
-            AdcValue.Ib_inv = 1.52*(IB_INV_LEM  - 2050)/(4096.0 - 2050);
-            AdcValue.Ic_inv = 1.475*(IC_INV_LEM - 2035)/(4096.0 - 2035);
+            AdcValue.Va_G = 0.75999999*(VaG_HCPL - 2711)/(4096.0 - 2711);
+            AdcValue.Vb_G = 0.850000024*(VbG_HCPL - 2646)/(4096.0 - 2646);
+            AdcValue.Vc_G = 0.75*(VcG_HCPL - 2695)/(4096.0 - 2695);
+            AdcValue.Ia_inv = 1.51999998*(IA_INV_LEM - 2062)/(4096.0 - 2062);
+            AdcValue.Ib_inv = 1.50999999*(IB_INV_LEM  - 2030)/(4096.0 - 2030);
+            AdcValue.Ic_inv = 1.47899997*(IC_INV_LEM - 2070)/(4096.0 - 2070);
             if (UDC_HCPL > 4)
             {
                 AdcValue.Udc = 1.0*(UDC_HCPL - 4)/(4096.0 - 4);
