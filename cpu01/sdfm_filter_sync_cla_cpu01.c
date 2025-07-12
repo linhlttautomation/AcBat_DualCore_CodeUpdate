@@ -65,6 +65,8 @@ Uint16 Task8_Isr = 0;
 
 Uint16 START = 0;
 
+Uint16 START_1 = 0;
+
 typedef enum {
     OFF_NORMAL,
     ON_NORMAL
@@ -779,6 +781,7 @@ int main(void)
     InitSysCtrl();
 
     #if(ALLOW_IPC_CPU == 1)
+
         InitIpc();
         // Reset trạng thái IPC trước khi bắt đầu
         IpcRegs.IPCACK.all = 0xFFFFFFFF;   // Xóa tất cả cờ IPC
@@ -1609,7 +1612,7 @@ int main(void)
 
         if(START == 1 || b_START_FLC == ON_NORMAL)
         {
-            #if(BUILDLEVEL == LEVEL1 ||BUILDLEVEL == LEVEL2|| BUILDLEVEL == LEVEL3 || BUILDLEVEL == LEVEL4||BUILDLEVEL == LEVEL5||BUILDLEVEL == LEVEL6)
+            #if(BUILDLEVEL == LEVEL1 ||BUILDLEVEL == LEVEL2|| BUILDLEVEL == LEVEL3 || BUILDLEVEL == LEVEL4||BUILDLEVEL == LEVEL5||BUILDLEVEL == LEVEL6||BUILDLEVEL == LEVEL7||BUILDLEVEL == LEVEL8)
                 CpuToCLA.EnableFlag = 1;
             #endif
         }
@@ -1779,16 +1782,10 @@ int main(void)
 
         #if(ALLOW_IPC_CPU == 1)
 
-            // Điều khiển giá trị biến START_2 trên CPU2
             if (START_1 == 1)
             {
-
-                // Gửi giá trị 1 đến CPU2 qua IPC (địa chỉ truyền dữ liệu)
                 IpcRegs.IPCSENDDATA = 1;
-                // Tín hiệu IPC để thông báo dữ liệu đã sẵn sàng
                 IpcRegs.IPCSET.bit.IPC0 = 1;
-
-                // Đợi CPU2 xác nhận đã nhận dữ liệu
                 while (IpcRegs.IPCFLG.bit.IPC0 == 1);
             }
             else

@@ -16,8 +16,10 @@
 #define LEVEL5        5           // Vong Dong IFB
 #define LEVEL6        6           // Vong AP IFB
 #define LEVEL7        7           // Vong dong noi luoi 3P4W
+#define LEVEL8        8           // Vong ap noi luoi 3P4W
+
 // ---------------------------------------------------
-#define BUILDLEVEL    LEVEL4
+#define BUILDLEVEL    LEVEL1
 // ---------------------------------------------------
 
 #define SINGLE_PHASE_MODE       1
@@ -46,7 +48,7 @@
 #define DATA1_IG_RMS             1.0
 // ---------------------------------------------------
 
-#define ALLOW_IPC_CPU               0
+#define ALLOW_IPC_CPU               1
 #define ALLOW_WATCHDOG_TIMER        0
 #define ALLOW_EXTERNAL_INTERRUPT    0
 #define ALLOW_BUTTON                0
@@ -85,6 +87,7 @@
 #endif
 
 // Define toán học
+#define PI 3.14159265358979
 #define can2 1.414213562f
 #define can3 1.732050808f
 #define can6 2.449489743f
@@ -105,6 +108,8 @@
 
 #define T_Us             0.002 // Time sample voltage
 #define Ti               0.00002 // Time sample current 0.0000154
+#define T                0.00002             // time sample
+#define T_Udc            0.0002              // time sample voltage
 
 #define LEM_1(A)     (2048.0*A/10.0)
 
@@ -248,26 +253,43 @@
 
 #if (BUILDLEVEL == LEVEL7)
 
-//#define KP_CURR_LOOP            1.15       // L filter 1.7mH: 17.0   --- L Filter 115uH: 1.15
-//#define KI_CURR_LOOP            800.0      // L filter 1.7mH: 800.0  --- L Filter 115uH: 800.0
-//
-#define KP_CURR_LOOP_Z          3.0       // L filter 1.7mH: 68.0   --- L Filter 115uH: 4.60
-#define KI_CURR_LOOP_Z          1500.0     // L filter 1.7mH: 3200.0 --- L Filter 115uH: 3200.0
+    //#define KP_CURR_LOOP            1.15       // L filter 1.7mH: 17.0   --- L Filter 115uH: 1.15
+    //#define KI_CURR_LOOP            800.0      // L filter 1.7mH: 800.0  --- L Filter 115uH: 800.0
+    //
+    #define KP_CURR_LOOP_Z          3.0       // L filter 1.7mH: 68.0   --- L Filter 115uH: 4.60
+    #define KI_CURR_LOOP_Z          1500.0     // L filter 1.7mH: 3200.0 --- L Filter 115uH: 3200.0
 
-#define KP_CURR_LOOP            3.0       // L filter 1.7mH: 17.0   --- L Filter 115uH: 1.15
-#define KI_CURR_LOOP            1500.0      // L filter 1.7mH: 800.0  --- L Filter 115uH: 800.0
+    #define KP_CURR_LOOP            3.0       // L filter 1.7mH: 17.0   --- L Filter 115uH: 1.15
+    #define KI_CURR_LOOP            1500.0      // L filter 1.7mH: 800.0  --- L Filter 115uH: 800.0
 
-//#define KP_CURR_LOOP_Z          4.60       // L filter 1.7mH: 68.0   --- L Filter 115uH: 4.60
-//#define KI_CURR_LOOP_Z          3200.0     // L filter 1.7mH: 3200.0 --- L Filter 115uH: 3200.0
+    //#define KP_CURR_LOOP_Z          4.60       // L filter 1.7mH: 68.0   --- L Filter 115uH: 4.60
+    //#define KI_CURR_LOOP_Z          3200.0     // L filter 1.7mH: 3200.0 --- L Filter 115uH: 3200.0
+
+    #define KP_PLL                  4.0
+    #define KI_PLL                  100.0
 
 #endif
 
+#if (BUILDLEVEL == LEVEL8)
+
+    #define KP_CURR_LOOP            3.0
+    #define KI_CURR_LOOP            1500.0
+
+    #define KP_CURR_LOOP_Z          3.0
+    #define KI_CURR_LOOP_Z          1500.0
+
+    #define KP_VOLT_UDC_LOOP        0.1
+    #define KI_VOLT_UDC_LOOP        5.0
+
+#endif
 // Define the base quantities for PU system conversion
 #define NORMAL_FREQ     50.0
 #define BASE_FREQ       150.0               // Base electrical frequency (Hz)
 #define Udc_max         800.0               // Max DC Voltage (V)
 #define Us_max          400.0               // Max Phase Voltage (V)
 #define Is_max          10.0               // Base Peak Phase Current (A)
+#define Wref            (2.0*PI*NORMAL_FREQ)
+#define Wmax            (2.0*PI*BASE_FREQ)
 
 // CMPSS FLC Permission
 #define CMPSS_PROTECT_UDC_UPPER         1 // Da test co the bao ve duoc, bv ok
