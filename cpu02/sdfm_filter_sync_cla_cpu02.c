@@ -66,6 +66,9 @@ volatile Uint16  StartFlag = 0;
 #pragma DATA_SECTION(START,"RAMGS0");
 volatile Uint16  START = 0;
 
+#pragma DATA_SECTION(START_2,"RAMGS0");
+volatile Uint16  START_2 = 0;
+
 #pragma DATA_SECTION(Task1_Isr,"RAMGS0");
 volatile Uint16  Task1_Isr = 0;
 
@@ -319,6 +322,13 @@ int main(void)
             CpuToCLA.VcRef = Setting_bat.VcRef/Uc_max;
             CpuToCLA.EnableFlag = 1;
             #endif
+        }
+
+        if (IpcRegs.IPCSTS.bit.IPC0 == 1)
+        {
+            START_2 = IpcRegs.IPCRECVDATA;
+
+            IpcRegs.IPCACK.bit.IPC0 = 1;
         }
 
         else

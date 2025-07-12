@@ -148,8 +148,14 @@ volatile PI_NORMAL_CLA pi_volt_Usd;
 #pragma DATA_SECTION(pi_volt_Usq,"CLADataLS0");
 volatile PI_NORMAL_CLA pi_volt_Usq;
 
+#pragma DATA_SECTION(pi_volt_Udc,"CLADataLS0");
+volatile PI_NORMAL_CLA pi_volt_Udc;
+
 #pragma DATA_SECTION(loop_volt_Us,"CLADataLS0");
 volatile int loop_volt_Us;
+
+#pragma DATA_SECTION(count_start_CL,"CLADataLS0");
+volatile short count_start_CL;
 
 #pragma DATA_SECTION(data1,"CLADataLS0");
 volatile DATA data1;
@@ -440,29 +446,31 @@ __interrupt void Cla1Task1 ( void )
             }
         #endif
 
-//        // Calculator PLL three phase
-//        clarke_volt_pll.As  = adc_filter.Va_G;
-//        clarke_volt_pll.Bs  = adc_filter.Vb_G;
-//        clarke_volt_pll.Cs  = adc_filter.Vc_G;
-//
-//        CLARKE_3PHASE_CLA_V2_MARCO(clarke_volt_pll)
-//
-//        park_volt_pll.alpha = clarke_volt_pll.Alpha;
-//        park_volt_pll.beta = clarke_volt_pll.Beta;
-//        park_volt_pll.theta = pll_3phase.Theta_har_1st;
-//        park_volt_pll.sine = CLAsinPU(pll_3phase.Theta_har_1st);
-//        park_volt_pll.cos = CLAcosPU(pll_3phase.Theta_har_1st);
-//        PARK_CLA_V2_MACRO(park_volt_pll)
-//
-//        filter_Usd.Vin = park_volt_pll.d;
-//        LOWPASSFILTER_MACRO(filter_Usd)
-//
-//        filter_Usq.Vin = park_volt_pll.q;
-//        LOWPASSFILTER_MACRO(filter_Usq)
-//
-//        pll_3phase.Usq = filter_Usq.Vout;
-//
-//        PLL_PHASE_CLA_V3_MACRO(pll_3phase)
+    #if(BUILDLEVEL == LEVEL7)
+            // Calculator PLL three phase
+            clarke_volt_pll.As  = adc_filter.Va_G;
+            clarke_volt_pll.Bs  = adc_filter.Vb_G;
+            clarke_volt_pll.Cs  = adc_filter.Vc_G;
+
+            CLARKE_3PHASE_CLA_V2_MARCO(clarke_volt_pll)
+
+            park_volt_pll.alpha = clarke_volt_pll.Alpha;
+            park_volt_pll.beta = clarke_volt_pll.Beta;
+            park_volt_pll.theta = pll_3phase.Theta_har_1st;
+            park_volt_pll.sine = CLAsinPU(pll_3phase.Theta_har_1st);
+            park_volt_pll.cos = CLAcosPU(pll_3phase.Theta_har_1st);
+            PARK_CLA_V2_MACRO(park_volt_pll)
+
+            filter_Usd.Vin = park_volt_pll.d;
+            LOWPASSFILTER_MACRO(filter_Usd)
+
+            filter_Usq.Vin = park_volt_pll.q;
+            LOWPASSFILTER_MACRO(filter_Usq)
+
+            pll_3phase.Usq = filter_Usq.Vout;
+
+            PLL_PHASE_CLA_V3_MACRO(pll_3phase)
+    #endif
 
         #if (BUILDLEVEL == LEVEL1 || BUILDLEVEL == LEVEL3 || BUILDLEVEL == LEVEL4)
             if(CpuToCLA.EnableFlag == 1)
@@ -785,6 +793,96 @@ __interrupt void Cla1Task1 ( void )
 
         #endif
 
+        #if(BUILDLEVEL == LEVEL8)
+
+            IsrTicker++;
+
+            clarke_curr.As  = AdcValue.Ia_inv;  // Phase A curr
+            clarke_curr.Bs  = AdcValue.Ib_inv;  // Phase B curr
+            clarke_curr.Cs  = AdcValue.Ic_inv;  // Phase C curr
+
+            CLARKE_3PHASE_CLA_V3_MARCO(clarke_curr)
+
+            park_curr.theta = pll_3phase.Theta_har_1st;
+            park_curr.alpha = clarke_curr.Alpha;
+            park_curr.beta = clarke_curr.Beta;
+            park_curr.gamma = clarke_curr.Gamma;
+            park_curr.sine  = CLAsinPU(pll_3phase.Theta_har_1st);
+            park_curr.cos  = CLAcosPU(pll_3phase.Theta_har_1st);
+            PARK_CLA_V3_MACRO(park_curr)
+
+            // ------------------------------------------------------------------------------
+            //  Voltage Controller
+            // ------------------------------------------------------------------------------
+            if(loop_volt_Udc >= 10)
+            {
+                if(count_start_CL == 1)
+                {
+                    rc_Ref.SetpointValue = adc_filter.Udc;
+                    count_start_CL = 0;
+                }
+                rc_Ref.TargetValue = 80.0/Udc_max;
+                RC_CLA_MACRO(rc_Ref)
+                pi_volt_Udc.REF = rc_Ref.SetpointValue;
+                //           pi_volt_Udc.REF = CpuToCLA.UdcRef;
+                pi_volt_Udc.INPUT = adc_filter.Udc;
+                pi_volt_Udc.ERROR = - pi_volt_Udc.REF + pi_volt_Udc.INPUT;
+                PI_NORMAL_MACRO(pi_volt_Udc)
+                loop_volt_Udc = 1;
+            }
+            else loop_volt_Udc++;
+
+            // ------------------------------------------------------------------------------
+            //  Current Controller
+            // ------------------------------------------------------------------------------
+            pi_curr_id.REF      = pi_volt_Udc.OUT;
+            pi_curr_id.INPUT    = park_curr.d;
+            pi_curr_id.ERROR    = pi_curr_id.REF - pi_curr_id.INPUT;
+            PI_NORMAL_MACRO(pi_curr_id);
+
+            pi_curr_iq.REF      = CpuToCLA.IqRef;
+            pi_curr_iq.INPUT    = park_curr.q;
+            pi_curr_iq.ERROR    = pi_curr_iq.REF - pi_curr_iq.INPUT;
+            PI_NORMAL_MACRO(pi_curr_iq);
+
+            pi_curr_iz.REF      = CpuToCLA.IzRef;
+            pi_curr_iz.INPUT    = park_curr.z;
+            pi_curr_iz.ERROR    = pi_curr_iz.REF - pi_curr_iz.INPUT;
+            PI_NORMAL_MACRO(pi_curr_iz);
+
+            //       ipark_voltref.d = pi_curr_id.OUT;
+            //       ipark_voltref.q = pi_curr_iq.OUT;
+            //       ipark_voltref.z = pi_curr_iz.OUT;
+
+            ipark_voltref.d = pi_curr_id.OUT  + filter_Usd.Vout;
+            ipark_voltref.q = pi_curr_iq.OUT  + filter_Usq.Vout;
+            ipark_voltref.z = pi_curr_iz.OUT;
+
+            //       ipark_voltref.d = pi_curr_id.OUT  + filter_Usd.Vout + Wref*Li*park_curr.q*Is_max/Us_max;
+            //       ipark_voltref.q = pi_curr_iq.OUT  + filter_Usq.Vout - Wref*Li*park_curr.d*Is_max/Us_max;
+            //       ipark_voltref.z = pi_curr_iz.OUT;
+
+            ipark_voltref.sine = CLAsinPU(pll_3phase.Theta_har_1st);
+            ipark_voltref.cos  = CLAcosPU(pll_3phase.Theta_har_1st);
+            iPARK_CLA_V3_MACRO(ipark_voltref)
+
+            Svm3d.Ualpha = ipark_voltref.alpha;
+            Svm3d.Ubeta = ipark_voltref.beta;
+            Svm3d.Ugamma = ipark_voltref.gamma;
+            Svm3d.Udc = AdcValue.Udc;
+            SVM3D_DQZ_GEN_CLA_MACRO_1(Svm3d)
+
+            pwm.MfuncA1 = Svm3d.da;
+            pwm.MfuncA2 = Svm3d.db;
+            pwm.MfuncB1 = Svm3d.dc;
+            pwm.MfuncB2 = Svm3d.dn;
+
+            EPwm4Regs.CMPA.bit.CMPA = (Uint16)(pwm.MfuncA1*pwm.PeriodMax);
+            EPwm6Regs.CMPA.bit.CMPA = (Uint16)(pwm.MfuncA2*pwm.PeriodMax);
+            EPwm5Regs.CMPA.bit.CMPA = (Uint16)(pwm.MfuncB1*pwm.PeriodMax);
+            EPwm8Regs.CMPA.bit.CMPA = (Uint16)(pwm.MfuncB2*pwm.PeriodMax);
+
+        #endif
     }
     else
     {
@@ -1295,6 +1393,30 @@ __interrupt void Cla1Task8 ( void )
 
     CLARKE_3PHASE_CLA_INIT(clarke_curr)
     clarke_volt  = clarke_curr;
+    clarke_volt_pll = clarke_curr;
+
+    #if(BUILDLEVEL == LEVEL7)
+        // PLL GRID VOLTAGE
+        pll_3phase.Kp = KP_PLL;
+        pll_3phase.Ki = KI_PLL;
+        pll_3phase.Ts = T;
+        pll_3phase.IN_MAX = Us_max;
+        pll_3phase.OUT_MAX = Wmax;
+        pll_3phase.wref1    = 1.0*Wref/Wmax;
+        pll_3phase.wref3    = 3.0*Wref/Wmax;
+
+        pll_3phase.Usq = 0;
+        pll_3phase.Theta_har_1st = 0;
+        pll_3phase.Theta_har_3rd = 0;
+        pll_3phase.Kp_dsp = 0;
+        pll_3phase.Ki_dsp = 0;
+        pll_3phase.w_P = 0;
+        pll_3phase.w_I = 0;
+        pll_3phase.w = 0;
+        pll_3phase.w1 = 0;
+        pll_3phase.w3 = 0;
+        pll_3phase.CheckPhase = 0;
+    #endif
 
     PARK_CLA_INIT(park_curr)
     park_volt = park_curr;
@@ -1451,6 +1573,40 @@ __interrupt void Cla1Task8 ( void )
         pi_curr_iz.OUT_max  = (float)Us_max;
     #endif
 
+    #if(BUILDLEVEL == LEVEL8)
+
+        //----------------------------------------------------
+        // Current controller
+        PI_NORMAL_INT(pi_curr_id)
+        pi_curr_id.Ts = (float)Ti;
+        pi_curr_id.Kp = KP_CURR_LOOP;
+        pi_curr_id.Ki = KI_CURR_LOOP;
+        pi_curr_id.IN_max   = (float)Is_max;
+        pi_curr_id.OUT_max  = (float)Us_max;
+
+        pi_curr_iq = pi_curr_id;
+        pi_curr_iq.Ts = (float)Ti;
+        pi_curr_iq.Kp = KP_CURR_LOOP;
+        pi_curr_iq.Ki = KI_CURR_LOOP;
+        pi_curr_iq.IN_max   = (float)Is_max;
+        pi_curr_iq.OUT_max  = (float)Us_max;
+
+        pi_curr_iz = pi_curr_id;
+        pi_curr_iz.Ts = (float)Ti;
+        pi_curr_iz.Kp = KP_CURR_LOOP_Z;
+        pi_curr_iz.Ki = KI_CURR_LOOP_Z;
+        pi_curr_iz.IN_max   = (float)Is_max;
+        pi_curr_iz.OUT_max  = (float)Us_max;
+
+        // Voltage controller
+        PI_NORMAL_INT(pi_volt_Udc)
+        pi_volt_Udc.Ts = T_Udc;
+        pi_volt_Udc.Kp = KP_VOLT_UDC_LOOP;
+        pi_volt_Udc.Ki = KI_VOLT_UDC_LOOP;
+        pi_volt_Udc.IN_max   = (float)Udc_max;
+        pi_volt_Udc.OUT_max  = (float)Is_max;
+
+    #endif
     // Filter ADC
     filter_Udc.Heso_out = 0.96;
     filter_Udc.Heso_in = 0.04;
@@ -1488,6 +1644,8 @@ __interrupt void Cla1Task8 ( void )
 
     IsrTicker = 0;
     START_ADC = 2;
+    count_start_CL = 1;
+    loop_volt_Udc = 10;
 
     data1.Vg_rms = DATA1_VG_RMS;
     data1.Ig_rms   = DATA1_IG_RMS;
