@@ -79,6 +79,7 @@ PAGE 1 :
    CLA1_MSGRAMLOW   : origin = 0x001480, length = 0x000080
    CLA1_MSGRAMHIGH  : origin = 0x001500, length = 0x000080
    
+   CPU1TOCPU2RAM  : origin = 0x03F800, length = 0x000400
 }
 
 
@@ -98,6 +99,7 @@ SECTIONS
    .esysmem         : > RAMGS3,    PAGE = 1
    Filter_RegsFile  : > RAMGS0,	   PAGE = 1
    CLA1mathTables   : > RAMLS0,    PAGE = 1
+   data_TPCbuff 	: > CPU1TOCPU2RAM, PAGE = 1
 
  #ifdef __TI_COMPILER_VERSION__
     #if __TI_COMPILER_VERSION__ >= 15009000
