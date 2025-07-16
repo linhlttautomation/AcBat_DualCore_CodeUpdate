@@ -11,8 +11,8 @@
 // Define Level
 #define LEVEL1        1           // Vong ho doc lap
 #define LEVEL2        2           // Vong ho IFB
-#define LEVEL3        3           // Vong dong doc lap
-#define LEVEL4        4           // Vong ap doc lap
+#define LEVEL3        3           // Vong dong doc lap 3P4W
+#define LEVEL4        4           // Vong ap doc lap 3P4W
 #define LEVEL5        5           // Vong Dong IFB
 #define LEVEL6        6           // Vong AP IFB
 #define LEVEL7        7           // Vong dong noi luoi 3P4W
@@ -54,6 +54,8 @@
 #define ALLOW_BUTTON                0
 #define ALLOW_CALIB_PI              0
 #define ALLOW_TIMER0                1
+#define ALLOW_CAN                   0
+#define ALLLOW_DAC                  0
 
 // ---------------------------------------------------
 #define MODE_MODULATION_SVM2D       2
@@ -97,7 +99,6 @@
 
 #define VaG_HCPL        AdcaResultRegs.ADCRESULT5
 #define VbG_HCPL        AdcaResultRegs.ADCRESULT2
-//#define VbG_HCPL        AdcaResultRegs.ADCRESULT3 //Vb_test
 
 #define VcG_HCPL        AdcbResultRegs.ADCRESULT5
 
@@ -225,11 +226,6 @@
         #define KI_CURR_LOOP_1            200.0
     #endif
 
-    #if(VAC_LOAD_32_GHEP_NOI == 92 && ALLOW_CALIB_PI == 1)
-        extern volatile float KP_CURR_LOOP_1;
-        extern volatile float KI_CURR_LOOP_1;
-    #endif
-
     #define KP_VOLT_US_LOOP           0.00001
     #define KI_VOLT_US_LOOP           0.1
 
@@ -292,13 +288,13 @@
 #define Wmax            (2.0*PI*BASE_FREQ)
 
 // CMPSS FLC Permission
-#define CMPSS_PROTECT_UDC_UPPER         1 // Da test co the bao ve duoc, bv ok
+#define CMPSS_PROTECT_UDC_UPPER         0//1 // Da test co the bao ve duoc, bv ok
 
 #define CMPSS_PROTECT_VaG_UPPER         0 // Da test co the bao ve duoc
 #define CMPSS_PROTECT_VaG_LOWER         0 // Da test co the bao ve duoc
 
-#define CMPSS_PROTECT_VbG_UPPER         1 // Da test co the bao ve duoc, bv ok
-#define CMPSS_PROTECT_VbG_LOWER         1 // Da test co the bao ve duoc, bv ok
+#define CMPSS_PROTECT_VbG_UPPER         0//1 // Da test co the bao ve duoc, bv ok
+#define CMPSS_PROTECT_VbG_LOWER         0//1 // Da test co the bao ve duoc, bv ok
 
 #define CMPSS_PROTECT_VcG_UPPER         0 //
 #define CMPSS_PROTECT_VcG_LOWER         0 //
@@ -309,8 +305,8 @@
 #define CMPSS_PROTECT_Ib_inv_UPPER      0
 #define CMPSS_PROTECT_Ib_inv_LOWER      0
 
-#define CMPSS_PROTECT_Ic_inv_UPPER      1 // Da test co the bao ve duoc, bv ok
-#define CMPSS_PROTECT_Ic_inv_LOWER      1 // Da test co the bao ve duoc, bv ok
+#define CMPSS_PROTECT_Ic_inv_UPPER      0//1 // Da test co the bao ve duoc, bv ok
+#define CMPSS_PROTECT_Ic_inv_LOWER      0//1 // Da test co the bao ve duoc, bv ok
 
 // CMPSS FLC Setting
 extern volatile float CMPSS_Udc_New_Protecion;

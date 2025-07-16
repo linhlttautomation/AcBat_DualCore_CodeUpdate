@@ -98,7 +98,7 @@
 						</toolChain>
 					</folderInfo>
 					<sourceEntries>
-						<entry excluding="library/Math/CLAmath/lib/cla1_math_library_datarom_fpu32.lib|library/Math/CLAmath/lib/cla1_math_library_datarom.lib|library/Math/CLAmath/lib/cla1_math_library.lib|library/Math/CLAmath/lib/cla0_math_library.lib|library/Math/CLAmath/lib/cla0_math_library_fpu32.lib|library/Math/CLAmath/lib/cla0_math_library_datarom.lib|library/Math/CLAmath/lib/cla0_math_library_datarom_fpu32.lib|library/Math/CLAmath/lib/2837x_c1bootROM_CLADataROMSymbols.lib|library/Math/CLAmath/lib/2805x_CLADataROMSymbols_revA.lib|library/Math/CLAmath/source|2837x_FLASH_SDFM_CLA_lnk_cpu1.cmd" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+						<entry excluding="2837x_FLASH_SDFM_CLA_lnk_cpu1.cmd|library/Math/CLAmath/lib/cla1_math_library_datarom_fpu32.lib|library/Math/CLAmath/lib/cla1_math_library_datarom.lib|library/Math/CLAmath/lib/cla1_math_library.lib|library/Math/CLAmath/lib/cla0_math_library.lib|library/Math/CLAmath/lib/cla0_math_library_fpu32.lib|library/Math/CLAmath/lib/cla0_math_library_datarom.lib|library/Math/CLAmath/lib/cla0_math_library_datarom_fpu32.lib|library/Math/CLAmath/lib/2837x_c1bootROM_CLADataROMSymbols.lib|library/Math/CLAmath/lib/2805x_CLADataROMSymbols_revA.lib|library/Math/CLAmath/source" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
 					</sourceEntries>
 				</configuration>
 			</storageModule>

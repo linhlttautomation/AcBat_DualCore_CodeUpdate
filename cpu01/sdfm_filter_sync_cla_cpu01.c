@@ -12,7 +12,6 @@
 #include "PV_Variables.h"
 #include "F2837xD_GlobalPrototypes.h"
 #include "PV_Setting.h"
-#include "stdio.h"
 
 //
 // Defines
@@ -63,16 +62,19 @@ Uint16 ndx3 = 0;
 Uint16 Task1_Isr = 0;
 Uint16 Task8_Isr = 0;
 
-Uint16 START = 0;
+Uint16 START_FLC = 0;
 
-Uint16 START_1 = 0;
+#pragma DATA_SECTION(data_TPC_u16, "data_TPCbuff");
+volatile Uint16 data_TPC_u16[10];
+
+Uint16 j;
 
 typedef enum {
-    OFF_NORMAL,
-    ON_NORMAL
-} START_FLC;
+    FLC_OFF,
+    FLC_ON
+} eFLCSts;
 
-START_FLC b_START_FLC = OFF_NORMAL;
+eFLCSts e_FLC_Sts = FLC_OFF;
 
 Uint16 ON_RELAY = 0;
 
@@ -97,11 +99,6 @@ volatile float CMPSS_Udc_New_Protecion = 350.0;
 volatile float CMPSS_Udc_Offset_New_Protecion = 0.0;
 volatile float CMPSS_Vg_Offset_New_Protecion = 0.0;
 volatile float CMPSS_Ig_inv_New_Protecion = 8.0; // Bao ve 320Vdc-103Vrms-Tai32Ohm-1kw
-
-#if(ALLOW_CALIB_PI == 1)
-    volatile float KP_CURR_LOOP_1 = 1.0;
-    volatile float KI_CURR_LOOP_1 = 200.0;
-#endif
 
 volatile Uint32 seconds_counter_cmpss = 0;
 volatile Uint32 CMPSS_Protect_Time = 0;
@@ -153,7 +150,7 @@ void InitCpuTimer0(void)
 
 __interrupt void Cpu_Timer0_ISR(void)
 {
-    if(START == 1 || b_START_FLC == ON_NORMAL)
+    if(START_FLC == 1 || e_FLC_Sts == FLC_ON)
     {
         seconds_counter_cmpss++;  // Ngat 1s
     }
@@ -182,7 +179,7 @@ __interrupt void Cpu_Timer0_ISR(void)
 //__interrupt void Watchdog_ISR(void)
 //{
 //    wd_count++;
-//    START = 0;
+//    START_FLC = 0;
 //
 //    EALLOW;
 //    //WdRegs.SCSR.bit.WDINTS = 1; // Xóa cờ ngắt WDT
@@ -190,6 +187,23 @@ __interrupt void Cpu_Timer0_ISR(void)
 //    EDIS;
 //
 //    PieCtrlRegs.PIEACK.all = PIEACK_GROUP1;
+//}
+
+//void Init_DAC(void)
+//{
+//    EALLOW;
+//
+//    DacaRegs.DACCTL.bit.DACREFSEL = 1;
+//
+//    DacaRegs.DACOUTEN.bit.DACOUTEN = 1;
+//
+//    GpioCtrlRegs.GPAMUX2.bit.GPIO26 = 3;
+//
+//    EDIS;
+//
+//    DELAY_US(10);
+//
+//    DacaRegs.DACVALS.bit.DACVALS = 2048;
 //}
 
 void Init_ADC_A()
@@ -246,15 +260,6 @@ void Init_ADC_A()
     AdcaRegs.ADCSOC2CTL.bit.ACQPS = 19;         //sample window is 20 SYSCLK cycles
     AdcaRegs.ADCSOC2CTL.bit.TRIGSEL = 0x0B;     //trigger on ePWM4 SOCA/C
 
-//    AdcaRegs.ADCSOC6CTL.bit.CHSEL = 2;          //SOC2 will convert pin A2 -> VbN
-//    AdcaRegs.ADCSOC6CTL.bit.ACQPS = 19;         //sample window is 20 SYSCLK cycles
-//    AdcaRegs.ADCSOC6CTL.bit.TRIGSEL = 0x0B;     //trigger on ePWM4 SOCA/C
-
-    // VbN_test
-//    AdcaRegs.ADCSOC3CTL.bit.CHSEL = 3;          //SOC3 will convert pin A2 -> VbN
-//    AdcaRegs.ADCSOC3CTL.bit.ACQPS = 19;         //sample window is 20 SYSCLK cycles
-//    AdcaRegs.ADCSOC3CTL.bit.TRIGSEL = 0x0B;     //trigger on ePWM4 SOCA/C
-
     // Ic_adc
     AdcaRegs.ADCSOC4CTL.bit.CHSEL = 4;          //SOC4 will convert pin A4 -> Iz_adc
     AdcaRegs.ADCSOC4CTL.bit.ACQPS = 19;         //sample window is 20 SYSCLK cycles
@@ -264,6 +269,16 @@ void Init_ADC_A()
     AdcaRegs.ADCSOC5CTL.bit.CHSEL = 5;          //SOC5 will convert pin A5 -> VaN
     AdcaRegs.ADCSOC5CTL.bit.ACQPS = 19;         //sample window is 20 SYSCLK cycles
     AdcaRegs.ADCSOC5CTL.bit.TRIGSEL = 0x0B;     //trigger on ePWM4 SOCA/C
+
+    // Test ADCIN14
+    AdcaRegs.ADCSOC7CTL.bit.CHSEL = 14;          //SOC6 will convert pin 14 -> Test ADCIN14
+    AdcaRegs.ADCSOC7CTL.bit.ACQPS = 19;         //sample window is 20 SYSCLK cycles
+    AdcaRegs.ADCSOC7CTL.bit.TRIGSEL = 0x0B;     //trigger on ePWM4 SOCA/C
+
+    // Test ADCIN15
+    AdcaRegs.ADCSOC8CTL.bit.CHSEL = 15;          //SOC6 will convert pin 15 -> Test ADCIN15
+    AdcaRegs.ADCSOC8CTL.bit.ACQPS = 19;         //sample window is 20 SYSCLK cycles
+    AdcaRegs.ADCSOC8CTL.bit.TRIGSEL = 0x0B;     //trigger on ePWM4 SOCA/C
 
     // Trigger CLA
     AdcaRegs.ADCINTSOCSEL1.all = 0x0000;          // No ADCInterrupt will trigger SOCx
@@ -327,11 +342,6 @@ void Init_ADC_B()
     AdcbRegs.ADCSOC5CTL.bit.ACQPS = 19;         //sample window is 20 SYSCLK cycles
     AdcbRegs.ADCSOC5CTL.bit.TRIGSEL = 0x0B;     //trigger on ePWM4 SOCA/C
 
-//    // VbN_test
-//    AdcbRegs.ADCSOC7CTL.bit.CHSEL = 3;          //SOC3 will convert pin B5 -> VcN
-//    AdcbRegs.ADCSOC7CTL.bit.ACQPS = 19;         //sample window is 20 SYSCLK cycles
-//    AdcbRegs.ADCSOC7CTL.bit.TRIGSEL = 0x0B;     //trigger on ePWM4 SOCA/C
-
     EDIS;
 }
 
@@ -382,9 +392,8 @@ void CMPSS_Protection_FLC(void)
         Cmpss2Regs.COMPDACCTL.bit.SWLOADSEL = 0;
 
         // VaG Upper protection
-        Cmpss2Regs.DACHVALS.bit.DACVAL = (2598 + (((30.0/can3)+ CMPSS_Vg_Offset_New_Protecion)/400.0)*(4096.0 - 2598) - 10)/1.1;
-        Cmpss2Regs.COMPCTL.bit.COMPHINV = 0;
-        Cmpss2Regs.COMPCTL.bit.CTRIPHSEL = 2;
+        Cmpss2Regs.COMPCTL.bit.COMPLINV = 0;
+        Cmpss2Regs.COMPCTL.bit.CTRIPLSEL = 2;
 
         EPwmXbarRegs.TRIP4MUX0TO15CFG.bit.MUX2 = 0 ; // Cmpss2 trip H
         EPwmXbarRegs.TRIP4MUXENABLE.bit.MUX2 = 1; // VagH
@@ -403,7 +412,6 @@ void CMPSS_Protection_FLC(void)
         Cmpss2Regs.COMPDACCTL.bit.SWLOADSEL = 0;
 
         // VaG Lower protecion
-        Cmpss2Regs.DACLVALS.bit.DACVAL = (2598 - (((CMPSS_Udc_New_Protecion/can3)+ CMPSS_Vg_Offset_New_Protecion)/400.0)*(4096.0 - 2598) + 0)/1.1;
         Cmpss2Regs.COMPCTL.bit.COMPLINV = 1;
         Cmpss2Regs.COMPCTL.bit.CTRIPLSEL = 2;
 
@@ -761,6 +769,11 @@ void UpdateProtectValue(void)
     EDIS;
 }
 
+#if(ALLOW_CAN == 1)
+
+
+#endif
+
 // Main
 //
 int main(void)
@@ -780,8 +793,13 @@ int main(void)
 
     InitSysCtrl();
 
+    #if(ALLOW_CAN == 1)
+
+    #endif
+
     #if(ALLOW_IPC_CPU == 1)
 
+        memset((void*)data_TPC_u16, 0, sizeof(data_TPC_u16));
         InitIpc();
         // Reset trạng thái IPC trước khi bắt đầu
         IpcRegs.IPCACK.all = 0xFFFFFFFF;   // Xóa tất cả cờ IPC
@@ -825,6 +843,14 @@ int main(void)
     CpuSysRegs.PCLKCR14.bit.CMPSS3 = 1;
     CpuSysRegs.PCLKCR14.bit.CMPSS4 = 1;
 
+    #if(ALLLOW_DAC == 1)
+    CpuSysRegs.PCLKCR16.bit.DAC_B = 1;
+    #endif
+
+    #if(ALLOW_CAN == 1)
+
+    #endif
+
     //CpuSysRegs.PCLKCR0.bit.WD = 1;  // Cấp clock cho Watchdog Timer
 
     EDIS;
@@ -850,6 +876,10 @@ int main(void)
     DevCfgRegs.CPUSEL12.bit.CMPSS6 = 1; // 1: CPU2, 0: CPU1
     DevCfgRegs.CPUSEL12.bit.CMPSS7 = 1; // 1: CPU2, 0: CPU1
     DevCfgRegs.CPUSEL12.bit.CMPSS8 = 1; // 1: CPU2, 0: CPU1
+    #if(ALLLOW_DAC == 1)
+        DevCfgRegs.CPUSEL14.bit.DAC_B = 0; // 1: CPU2, 0: CPU1
+    #endif
+
     // Đóng khóa
 
     EDIS;
@@ -1027,6 +1057,7 @@ int main(void)
     GpioCtrlRegs.GPCGMUX1.bit.GPIO73 = 0;      //
     GpioCtrlRegs.GPCDIR.bit.GPIO73 = 1;     // 1=OUTput,  0=INput
     GpioCtrlRegs.GPCMUX1.bit.GPIO73 = 3;  // Chọn chế độ XCLKOUT cho GPIO73
+
     EDIS;
 
     #if(ALLOW_BUTTON == 1)
@@ -1333,7 +1364,13 @@ int main(void)
     CpuSysRegs.PCLKCR0.bit.TBCLKSYNC = 1;
     EDIS;
 
-    InitCpuTimer0();
+    #if(ALLOW_TIMER0)
+        InitCpuTimer0();
+    #endif
+
+    #if(ALLLOW_DAC)
+        Init_DAC();
+    #endif
 
 // Clear all __interrupts and initialize PIE vector table:
 // Disable CPU __interrupts
@@ -1593,24 +1630,16 @@ int main(void)
 
     while(1)
     {
-//        if(START == 1)
-//        {
-//            b_START_FLC = ON_NORMAL;
-//        }
-//        else if(START == 0)
-//        {
-//            b_START_FLC = OFF_NORMAL;
-//        }
-//        if(b_START_FLC == ON_NORMAL)
-//        {
-//            START = 1;
-//        }
-//        else if(b_START_FLC == OFF_NORMAL)
-//        {
-//            START = 0;
-//        }
+        if(e_FLC_Sts == FLC_ON)
+        {
+            START_FLC = 1;
+        }
+        else if(e_FLC_Sts == FLC_OFF)
+        {
+            START_FLC = 0;
+        }
 
-        if(START == 1 || b_START_FLC == ON_NORMAL)
+        if(START_FLC == 1 || e_FLC_Sts == FLC_ON)
         {
             #if(BUILDLEVEL == LEVEL1 ||BUILDLEVEL == LEVEL2|| BUILDLEVEL == LEVEL3 || BUILDLEVEL == LEVEL4||BUILDLEVEL == LEVEL5||BUILDLEVEL == LEVEL6||BUILDLEVEL == LEVEL7||BUILDLEVEL == LEVEL8)
                 CpuToCLA.EnableFlag = 1;
@@ -1625,10 +1654,11 @@ int main(void)
            ResetWatchdog();
         #endif
 
-        // Neu co su kien bao ve thi khong cho phep START = 1
+        // Neu co su kien bao ve thi khong cho phep START_FLC = 1
         if(EPwm4Regs.TZFLG.bit.OST == 1 || EPwm6Regs.TZFLG.bit.OST == 1 || EPwm5Regs.TZFLG.bit.OST == 1 || EPwm8Regs.TZFLG.bit.OST == 1)
         {
-            START = 0;
+            START_FLC = 0;
+            e_FLC_Sts = FLC_OFF;
             CpuToCLA.EnableFlag = 0;
         }
 
@@ -1718,11 +1748,11 @@ int main(void)
         }
 
         #if(BUILDLEVEL == LEVEL4)
-        // Nếu điện áp Udc không đủ để điều chế ra Vac đặt thì hiện thị cảnh báo và tắt START
+        // Nếu điện áp Udc không đủ để điều chế ra Vac đặt thì hiện thị cảnh báo và tắt START_FLC
         if(ClaToCPU.Udc_under_modulation == 1)
         {
             protect_chanel.Udc_under_modulation = 1;
-    //        START = 0;
+    //        START_FLC = 0;
     //        CpuToCLA.EnableFlag = 0;
         }
         else
@@ -1742,7 +1772,7 @@ int main(void)
         #if(ALLOW_BUTTON == 1)
             if(GpioDataRegs.GPBDAT.bit.GPIO32 == 1)
             {
-                START = 0;
+                START_FLC = 0;
                 CpuToCLA.EnableFlag = 0;
             }
         #endif
@@ -1774,7 +1804,7 @@ int main(void)
               GpioDataRegs.GPASET.bit.GPIO25 = 1;}
           //  while(GpioDataRegs.GPADAT.bit.GPIO27 != 0 && GpioDataRegs.GPADAT.bit.GPIO25 != 0)
            // {
-           //     START = 0;
+           //     START_FLC = 0;
 
            // }
 
@@ -1782,18 +1812,29 @@ int main(void)
 
         #if(ALLOW_IPC_CPU == 1)
 
-            if (START_1 == 1)
+//            if (START_TPC == 1)
+//            {
+//                IpcRegs.IPCSENDDATA = 1;
+//                IpcRegs.IPCSET.bit.IPC0 = 1;
+//                while (IpcRegs.IPCFLG.bit.IPC0 == 1);
+//            }
+//            else
+//            {
+//                IpcRegs.IPCSENDDATA = 0;
+//                IpcRegs.IPCSET.bit.IPC0 = 1;
+//                while (IpcRegs.IPCFLG.bit.IPC0 == 1);
+//            }
+
+            for(j = 0; j < 10; j++)
             {
-                IpcRegs.IPCSENDDATA = 1;
-                IpcRegs.IPCSET.bit.IPC0 = 1;
-                while (IpcRegs.IPCFLG.bit.IPC0 == 1);
+            data_TPC_u16[j] = 0;
             }
-            else
-            {
-                IpcRegs.IPCSENDDATA = 0;
-                IpcRegs.IPCSET.bit.IPC0 = 1;
-                while (IpcRegs.IPCFLG.bit.IPC0 == 1);
-            }
+
+            IpcRegs.IPCSET.bit.IPC0 = 1;
+
+            while(IpcRegs.IPCFLG.bit.IPC0 == 1);
+
+            DELAY_US(100000);
 
         #endif
     }

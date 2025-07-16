@@ -66,8 +66,8 @@ volatile Uint16  StartFlag = 0;
 #pragma DATA_SECTION(START,"RAMGS0");
 volatile Uint16  START = 0;
 
-#pragma DATA_SECTION(START_2,"RAMGS0");
-volatile Uint16  START_2 = 0;
+#pragma DATA_SECTION(START_TPC,"RAMGS0");
+volatile Uint16  START_TPC = 0;
 
 #pragma DATA_SECTION(Task1_Isr,"RAMGS0");
 volatile Uint16  Task1_Isr = 0;
@@ -119,6 +119,11 @@ volatile Uint16 MEA_voltUdcHi = MEAUDC(375);
 #pragma DATA_SECTION(MEA_voltUdcLo, "RAMGS0");
 volatile Uint16 MEA_voltUdcLo = 0;
 
+#pragma DATA_SECTION(data_TPC_u16, "data_TPCbuff");
+volatile Uint16 data_TPC_u16[10];
+
+#pragma DATA_SECTION(j, "RAMGS0");
+Uint16 j;
 //
 // Function prototypes
 //
@@ -305,7 +310,24 @@ int main(void)
 
     while(1)
     {
-        if(START == 1)
+//        if (IpcRegs.IPCSTS.bit.IPC0 == 1)
+//        {
+//            START_TPC = IpcRegs.IPCRECVDATA;
+//            IpcRegs.IPCACK.bit.IPC0 = 1;
+//        }
+
+        if(IpcRegs.IPCSTS.bit.IPC0 == 1)
+        {
+            for(j = 0; j < 10; j++)
+            {
+                Uint16 DATA_TPC_U16 = data_TPC_u16[j];
+            }
+            START_TPC = data_TPC_u16[1];
+
+            IpcRegs.IPCACK.bit.IPC0 = 1;
+        }
+
+        if(START == 1 || START_TPC == 1)
         {
             // LEVEL1
             #if(BUILDLEVEL == LEVEL1)
@@ -323,14 +345,6 @@ int main(void)
             CpuToCLA.EnableFlag = 1;
             #endif
         }
-
-        if (IpcRegs.IPCSTS.bit.IPC0 == 1)
-        {
-            START_2 = IpcRegs.IPCRECVDATA;
-
-            IpcRegs.IPCACK.bit.IPC0 = 1;
-        }
-
         else
         {
             CpuToCLA.EnableFlag = 0;
