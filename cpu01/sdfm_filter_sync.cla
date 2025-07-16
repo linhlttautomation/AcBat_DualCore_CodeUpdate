@@ -160,6 +160,15 @@ volatile short count_start_CL;
 #pragma DATA_SECTION(data1,"CLADataLS0");
 volatile DATA data1;
 
+#if(VAC_LOAD_32_GHEP_NOI == 103 && ALLOW_CALIB_PI == 1)
+    #pragma DATA_SECTION(KP_CURR_LOOP_1,"CLADataLS0");
+    volatile float KP_CURR_LOOP_1;
+
+    #pragma DATA_SECTION(KI_CURR_LOOP_1,"CLADataLS0");
+    volatile float KI_CURR_LOOP_1;
+#endif
+
+
 //#pragma DATA_SECTION(kf,"CLADataLS0");
 //volatile KalmanFilter kf_VaG;
 //
