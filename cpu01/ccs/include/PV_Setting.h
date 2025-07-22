@@ -19,7 +19,7 @@
 #define LEVEL8        8           // Vong ap noi luoi 3P4W
 
 // ---------------------------------------------------
-#define BUILDLEVEL    LEVEL1
+#define BUILDLEVEL    LEVEL4
 // ---------------------------------------------------
 
 #define SINGLE_PHASE_MODE       1
@@ -56,8 +56,6 @@
 #define ALLOW_TIMER0                1
 #define ALLOW_CAN                   0
 #define ALLLOW_DAC                  0
-#define ALLOW_DMA                   0
-#define TEST_GPIO                   0
 
 // ---------------------------------------------------
 #define MODE_MODULATION_SVM2D       2

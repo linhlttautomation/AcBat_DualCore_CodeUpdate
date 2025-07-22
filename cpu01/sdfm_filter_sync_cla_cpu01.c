@@ -208,39 +208,6 @@ __interrupt void Cpu_Timer0_ISR(void)
 //    DacaRegs.DACVALS.bit.DACVALS = 2048;
 //}
 
-//void InitDMA(void)
-//{
-//    EALLOW;
-//
-//    DmaRegs.DMACTRL.bit.HARDRESET = 1;  asm(" NOP");  asm(" NOP");
-//    DmaRegs.DEBUGCTRL.bit.FREE = 1;
-//
-//    DmaRegs.CH1.DST_BEG_ADDR_SHADOW = (Uint32)&AdcAResultBuff[0];
-//    DmaRegs.CH1.SRC_BEG_ADDR_SHADOW = (Uint32)&AdcaResultRegs.ADCRESULT0;
-//
-//    DmaRegs.CH1.BURST_SIZE.all = 0;
-//    DmaRegs.CH1.TRANSFER_SIZE = 128 - 1;
-//
-//    DmaRegs.CH1.SRC_BURST_STEP = 0;
-//    DmaRegs.CH1.DST_BURST_STEP = 0;
-//    DmaRegs.CH1.SRC_TRANSFER_STEP = 0;
-//    DmaRegs.CH1.DST_TRANSFER_STEP = 1;
-//
-//    DmaClaSrcSelRegs.DMACHSRCSEL1.bit.CH1 = DMA_ADCAINT1;
-//
-//    DmaRegs.CH1.MODE.bit.PERINTSEL = DMA_ADCAINT1;
-//    DmaRegs.CH1.MODE.bit.PERINTE = 1;
-//    DmaRegs.CH1.MODE.bit.OVRINTE = 0;
-//    DmaRegs.CH1.MODE.bit.CHINTMODE = 0;
-//    DmaRegs.CH1.MODE.bit.DATASIZE = 0;
-//    DmaRegs.CH1.MODE.bit.CONTINUOUS = 1;
-//
-//    DmaRegs.CH1.CONTROL.bit.ERRCLR = 1;
-//    DmaRegs.CH1.CONTROL.bit.RUN = 1;
-//
-//    EDIS;
-//}
-
 void Init_ADC_A()
 {
     Uint16 i;
@@ -862,10 +829,6 @@ int main(void)
 
     Init_ADC_A();
     Init_ADC_B();
-
-    #if(ALLOW_DMA)
-        InitDMA();
-    #endif
 
     EALLOW;
 
