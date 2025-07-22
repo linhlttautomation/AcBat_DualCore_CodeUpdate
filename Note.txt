@@ -1,0 +1,7 @@
+12/7/2025:
+1. Test IPC đã giao tiếp được giữa 2 CPU biến START_TPC
+2. Uniflash không nạp được chương trình, cần nghiên cứu cấu hình Flash thêm
+3. Verify được có thể đọc được ADCD và ADCIN14 và ADCIN15
+14/7/2025:
+1. Test DAC nhưng chưa được
+2. Truyền được nhiều giá trị giữa 2 CPU dùng MSGRAM, tuy nhiên chưa fix được lỗi khởi tạo giá trị của mảng
