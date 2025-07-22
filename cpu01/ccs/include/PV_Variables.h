@@ -83,15 +83,15 @@ typedef struct
     float Ua;
     float Ub;
     float Uc;
-    Uint16 Prism;
+    unsigned int Prism;
 	float da;
 	float db;
 	float dc;
 	float dn;
 	float Theta1;
     float Freq;
-	int32 Currflag;
-    int32 Voltflag;
+    long Currflag;
+	long Voltflag;
     short SwitchRamp;
     float Theta_gen;
     float Is;
@@ -103,7 +103,7 @@ typedef struct
 {
 	ADC_VALUE ADC_CPU;
 	MEASUREMENT_VAULE MEASUARE_CPU;
-    Uint16 Udc_under_modulation;
+	unsigned int Udc_under_modulation;
 }CLA_TO_CPU;
 
 //----------------------------------------------------------------------------------------
@@ -175,24 +175,24 @@ typedef struct
 
 typedef struct
 {
-    Uint16 Udc_upper;
+    unsigned int Udc_upper;
 
-    Uint16 VaG_upper;
-    Uint16 VaG_lower;
-    Uint16 VbG_upper;
-    Uint16 VbG_lower;
-    Uint16 VcG_upper;
-    Uint16 VcG_lower;
+    unsigned int VaG_upper;
+    unsigned int VaG_lower;
+    unsigned int VbG_upper;
+    unsigned int VbG_lower;
+    unsigned int VcG_upper;
+    unsigned int VcG_lower;
 
-    Uint16 Ia_upper;
-    Uint16 Ia_lower;
-    Uint16 Ib_upper;
-    Uint16 Ib_lower;
-    Uint16 Ic_upper;
-    Uint16 Ic_lower;
-    Uint16 Iz_upper;
-    Uint16 Iz_lower;
-    Uint16 Udc_under_modulation;
+    unsigned int Ia_upper;
+    unsigned int Ia_lower;
+    unsigned int Ib_upper;
+    unsigned int Ib_lower;
+    unsigned int Ic_upper;
+    unsigned int Ic_lower;
+    unsigned int Iz_upper;
+    unsigned int Iz_lower;
+    unsigned int Udc_under_modulation;
 
 }PROTECT_CHANEL;
 #endif

@@ -56,6 +56,8 @@
 #define ALLOW_TIMER0                1
 #define ALLOW_CAN                   0
 #define ALLLOW_DAC                  0
+#define ALLOW_DMA                   0
+#define TEST_GPIO                   0
 
 // ---------------------------------------------------
 #define MODE_MODULATION_SVM2D       2
@@ -288,13 +290,13 @@
 #define Wmax            (2.0*PI*BASE_FREQ)
 
 // CMPSS FLC Permission
-#define CMPSS_PROTECT_UDC_UPPER         0//1 // Da test co the bao ve duoc, bv ok
+#define CMPSS_PROTECT_UDC_UPPER         1 // Da test co the bao ve duoc, bv ok
 
 #define CMPSS_PROTECT_VaG_UPPER         0 // Da test co the bao ve duoc
 #define CMPSS_PROTECT_VaG_LOWER         0 // Da test co the bao ve duoc
 
-#define CMPSS_PROTECT_VbG_UPPER         0//1 // Da test co the bao ve duoc, bv ok
-#define CMPSS_PROTECT_VbG_LOWER         0//1 // Da test co the bao ve duoc, bv ok
+#define CMPSS_PROTECT_VbG_UPPER         1 // Da test co the bao ve duoc, bv ok
+#define CMPSS_PROTECT_VbG_LOWER         1 // Da test co the bao ve duoc, bv ok
 
 #define CMPSS_PROTECT_VcG_UPPER         0 //
 #define CMPSS_PROTECT_VcG_LOWER         0 //
@@ -305,8 +307,8 @@
 #define CMPSS_PROTECT_Ib_inv_UPPER      0
 #define CMPSS_PROTECT_Ib_inv_LOWER      0
 
-#define CMPSS_PROTECT_Ic_inv_UPPER      0//1 // Da test co the bao ve duoc, bv ok
-#define CMPSS_PROTECT_Ic_inv_LOWER      0//1 // Da test co the bao ve duoc, bv ok
+#define CMPSS_PROTECT_Ic_inv_UPPER      1 // Da test co the bao ve duoc, bv ok
+#define CMPSS_PROTECT_Ic_inv_LOWER      1 // Da test co the bao ve duoc, bv ok
 
 // CMPSS FLC Setting
 extern volatile float CMPSS_Udc_New_Protecion;

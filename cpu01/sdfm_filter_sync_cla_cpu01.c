@@ -5,13 +5,13 @@
 //
 // Included Files
 //
+#include <PV_Setting.h>
+#include <PV_Variables.h>
 #include "F28x_Project.h"
 #include "cla_sdfm_filter_sync_shared.h"
 #include "F2837xD_sdfm_drivers.h"
 #include "F2837xD_struct.h"
-#include "PV_Variables.h"
 #include "F2837xD_GlobalPrototypes.h"
-#include "PV_Setting.h"
 
 //
 // Defines
@@ -89,6 +89,8 @@ Uint16 ClrPrtFLg_Fst = 0;
 Uint16 RunTask8Flag = 0;
 
 Uint16 FLC_RstFlg = 0;
+
+Uint16 test_gpio = 0;
 
 /*volatile float CMPSS_Udc_New_Protecion = 480.0;
 volatile float CMPSS_Udc_Offset_New_Protecion = 0.0;
@@ -204,6 +206,39 @@ __interrupt void Cpu_Timer0_ISR(void)
 //    DELAY_US(10);
 //
 //    DacaRegs.DACVALS.bit.DACVALS = 2048;
+//}
+
+//void InitDMA(void)
+//{
+//    EALLOW;
+//
+//    DmaRegs.DMACTRL.bit.HARDRESET = 1;  asm(" NOP");  asm(" NOP");
+//    DmaRegs.DEBUGCTRL.bit.FREE = 1;
+//
+//    DmaRegs.CH1.DST_BEG_ADDR_SHADOW = (Uint32)&AdcAResultBuff[0];
+//    DmaRegs.CH1.SRC_BEG_ADDR_SHADOW = (Uint32)&AdcaResultRegs.ADCRESULT0;
+//
+//    DmaRegs.CH1.BURST_SIZE.all = 0;
+//    DmaRegs.CH1.TRANSFER_SIZE = 128 - 1;
+//
+//    DmaRegs.CH1.SRC_BURST_STEP = 0;
+//    DmaRegs.CH1.DST_BURST_STEP = 0;
+//    DmaRegs.CH1.SRC_TRANSFER_STEP = 0;
+//    DmaRegs.CH1.DST_TRANSFER_STEP = 1;
+//
+//    DmaClaSrcSelRegs.DMACHSRCSEL1.bit.CH1 = DMA_ADCAINT1;
+//
+//    DmaRegs.CH1.MODE.bit.PERINTSEL = DMA_ADCAINT1;
+//    DmaRegs.CH1.MODE.bit.PERINTE = 1;
+//    DmaRegs.CH1.MODE.bit.OVRINTE = 0;
+//    DmaRegs.CH1.MODE.bit.CHINTMODE = 0;
+//    DmaRegs.CH1.MODE.bit.DATASIZE = 0;
+//    DmaRegs.CH1.MODE.bit.CONTINUOUS = 1;
+//
+//    DmaRegs.CH1.CONTROL.bit.ERRCLR = 1;
+//    DmaRegs.CH1.CONTROL.bit.RUN = 1;
+//
+//    EDIS;
 //}
 
 void Init_ADC_A()
@@ -828,6 +863,10 @@ int main(void)
     Init_ADC_A();
     Init_ADC_B();
 
+    #if(ALLOW_DMA)
+        InitDMA();
+    #endif
+
     EALLOW;
 
     CpuSysRegs.PCLKCR2.bit.EPWM4 = 1;
@@ -843,8 +882,12 @@ int main(void)
     CpuSysRegs.PCLKCR14.bit.CMPSS3 = 1;
     CpuSysRegs.PCLKCR14.bit.CMPSS4 = 1;
 
+    #if(ALLOW_DMA)
+        CpuSysRegs.PCLKCR0.bit.DMA = 1;
+    #endif
+
     #if(ALLLOW_DAC == 1)
-    CpuSysRegs.PCLKCR16.bit.DAC_B = 1;
+        CpuSysRegs.PCLKCR16.bit.DAC_B = 1;
     #endif
 
     #if(ALLOW_CAN == 1)
@@ -876,6 +919,7 @@ int main(void)
     DevCfgRegs.CPUSEL12.bit.CMPSS6 = 1; // 1: CPU2, 0: CPU1
     DevCfgRegs.CPUSEL12.bit.CMPSS7 = 1; // 1: CPU2, 0: CPU1
     DevCfgRegs.CPUSEL12.bit.CMPSS8 = 1; // 1: CPU2, 0: CPU1
+
     #if(ALLLOW_DAC == 1)
         DevCfgRegs.CPUSEL14.bit.DAC_B = 0; // 1: CPU2, 0: CPU1
     #endif
@@ -1058,6 +1102,13 @@ int main(void)
     GpioCtrlRegs.GPCDIR.bit.GPIO73 = 1;     // 1=OUTput,  0=INput
     GpioCtrlRegs.GPCMUX1.bit.GPIO73 = 3;  // Chọn chế độ XCLKOUT cho GPIO73
 
+    #if(TEST_GPIO)
+        GpioCtrlRegs.GPBMUX1.bit.GPIO42 = 0;  // Chọn chức năng GPIO cho chân GPIO42
+        GpioCtrlRegs.GPBDIR.bit.GPIO42 = 1;   // Cấu hình GPIO42 làm output
+        GpioDataRegs.GPBCLEAR.bit.GPIO42 = 1; // Khởi tạo ở mức thấp
+        GpioCtrlRegs.GPBPUD.bit.GPIO42 = 0;
+    #endif
+
     EDIS;
 
     #if(ALLOW_BUTTON == 1)
@@ -1189,21 +1240,21 @@ int main(void)
     #elif(ADC_TRIGGER_MODE == ADC_TRIGGER_PRD)
         EPwm4Regs.ETSEL.bit.SOCASEL = ET_CTR_PRD;
     #elif(ADC_TRIGGER_MODE == ADC_TRIGGER_CMPB)
-        EPwm4Regs.ETSEL.bit.SOCASEL = ET_CTRU_CMPB; // or ET_CTRD_CMPB
+        EPwm4Regs.ETSEL.bit.SOCASEL = ET_CTRU_CMPB;
     #elif(ADC_TRIGGER_MODE == ADC_TRIGGER_CMPA)
-        EPwm4Regs.ETSEL.bit.SOCASEL = ET_CTRU_CMPA;  // ET_CTRD_CMPA
+        EPwm4Regs.ETSEL.bit.SOCASEL = ET_CTRU_CMPA;
     #endif
 
-    EPwm4Regs.ETPS.bit.SOCAPRD = ET_1ST;                // Generate pulse on 2nd event
+    EPwm4Regs.ETPS.bit.SOCAPRD = ET_1ST;
     EPwm4Regs.ETCLR.bit.SOCA = 1;
     EPwm4Regs.ETPS.bit.SOCACNT = ET_1ST;
 
     // Enable CNT_zero interrupt using EPWM4 Time-base
-    EPwm4Regs.ETSEL.bit.INTEN = 1;                      // enable EPWM4INT generation
-    EPwm4Regs.ETSEL.bit.INTSEL = ET_CTR_ZERO;        // enable interrupt CNT_zero event
-    EPwm4Regs.ETPS.bit.INTPRD = ET_1ST;                 // generate interrupt on the 2nd event
+    EPwm4Regs.ETSEL.bit.INTEN = 1;
+    EPwm4Regs.ETSEL.bit.INTSEL = ET_CTR_ZERO;
+    EPwm4Regs.ETPS.bit.INTPRD = ET_1ST;
     EPwm4Regs.ETPS.bit.INTCNT = ET_1ST;
-    EPwm4Regs.ETCLR.bit.INT = 1;                        // enable more interrupts
+    EPwm4Regs.ETCLR.bit.INT = 1;
 
     EDIS;
 
@@ -1630,6 +1681,17 @@ int main(void)
 
     while(1)
     {
+        #if(TEST_GPIO)
+            if(test_gpio)
+            {
+                GpioDataRegs.GPBSET.bit.GPIO42 = 1;
+            }
+            else
+            {
+                GpioDataRegs.GPBCLEAR.bit.GPIO42 = 1;
+            }
+        #endif
+
         if(e_FLC_Sts == FLC_ON)
         {
             START_FLC = 1;

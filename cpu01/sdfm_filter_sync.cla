@@ -3,6 +3,9 @@
  */
 
 // Included Files
+#include <PV_Setting.h>
+#include <PV_Variables.h>
+
 #include "cla_sdfm_filter_sync_shared.h"
 #include "F2837xD_cla.h"
 #include "F2837xD_piectrl.h"
@@ -18,9 +21,7 @@
 #include "PWM_3T_CLA.h"
 #include "PARK_CLA.h"
 #include "CLAmath.h"
-#include "PV_Variables.h"
 #include "F2837xD_adc.h"
-#include "PV_Setting.h"
 #include "LowFilter.h"
 #include "CLARKE_3PHASE_CLA.h"
 #include "PI_NORMAL_CLA.h"
@@ -453,6 +454,7 @@ __interrupt void Cla1Task1 ( void )
             {
                 ClaToCPU.Udc_under_modulation = 0;
             }
+
         #endif
 
     #if(BUILDLEVEL == LEVEL7)
