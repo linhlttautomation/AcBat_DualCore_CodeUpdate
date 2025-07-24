@@ -38,17 +38,17 @@
 		<link>
 			<name>2837x_RAM_SDFM_CLA_lnk_cpu3.cmd</name>
 			<type>1</type>
-			<location>C:/ti/c2000/C2000Ware_5_03_00_00/device_support/f2837xd/examples/dual/sdfm_filters_sync_cla_ghep_noi_3p/cpu02/2837x_RAM_SDFM_CLA_lnk_cpu2.cmd</location>
+			<location>C:/ti/c2000/C2000Ware_5_03_00_00/device_support/f2837xd/examples/dual/sdfm_filters_sync_cla_ACBat_Code_V2/cpu02/2837x_RAM_SDFM_CLA_lnk_cpu2.cmd</location>
 		</link>
 		<link>
 			<name>AC_Battery_Main_Cpu2.c</name>
 			<type>1</type>
-			<location>C:/ti/c2000/C2000Ware_5_03_00_00/device_support/f2837xd/examples/dual/sdfm_filters_sync_cla_ghep_noi_3p/cpu02/sdfm_filter_sync_cla_cpu02.c</location>
+			<location>C:/ti/c2000/C2000Ware_5_03_00_00/device_support/f2837xd/examples/dual/sdfm_filters_sync_cla_ACBat_Code_V2/cpu02/sdfm_filter_sync_cla_cpu02.c</location>
 		</link>
 		<link>
 			<name>AC_Battery_Task2.cla</name>
 			<type>1</type>
-			<location>C:/ti/c2000/C2000Ware_5_03_00_00/device_support/f2837xd/examples/dual/sdfm_filters_sync_cla_ghep_noi_3p/cpu02/sdfm_filter_sync.cla</location>
+			<location>C:/ti/c2000/C2000Ware_5_03_00_00/device_support/f2837xd/examples/dual/sdfm_filters_sync_cla_ACBat_Code_V2/cpu02/sdfm_filter_sync.cla</location>
 		</link>
 		<link>
 			<name>F2837xD_CodeStartBranch.asm</name>
