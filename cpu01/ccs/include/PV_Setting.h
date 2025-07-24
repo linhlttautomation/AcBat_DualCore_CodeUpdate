@@ -50,8 +50,6 @@
 
 #define ALLOW_IPC_CPU               1
 #define ALLOW_WATCHDOG_TIMER        0
-#define ALLOW_EXTERNAL_INTERRUPT    0
-#define ALLOW_BUTTON                0
 #define ALLOW_CALIB_PI              0
 #define ALLOW_TIMER0                1
 #define ALLOW_CAN                   0
@@ -63,16 +61,6 @@
 
 // ---------------------------------------------------
 #define MODE_MODULATION             MODE_MODULATION_SVM3D
-// ---------------------------------------------------
-
-// ---------------------------------------------------
-#define ADC_TRIGGER_ZERO            1
-#define ADC_TRIGGER_PRD             2
-#define ADC_TRIGGER_CMPB            3
-#define ADC_TRIGGER_CMPA            4
-
-// ---------------------------------------------------
-#define ADC_TRIGGER_MODE            ADC_TRIGGER_ZERO
 // ---------------------------------------------------
 
 #if(BUILDLEVEL == LEVEL4)
@@ -94,18 +82,18 @@
 #define can3 1.732050808f
 #define can6 2.449489743f
 
-// Define đọc ADC
-#define UDC_HCPL        AdcbResultRegs.ADCRESULT2
+// Define đọc ADC FLC
+#define UDC_HCPL        AdcbResultRegs.ADCRESULT1 //B1
 
-#define VaG_HCPL        AdcaResultRegs.ADCRESULT5
-#define VbG_HCPL        AdcaResultRegs.ADCRESULT2
+#define VaG_HCPL        AdcdResultRegs.ADCRESULT2 //D2
+#define VbG_HCPL        AdcdResultRegs.ADCRESULT4 //D4
 
-#define VcG_HCPL        AdcbResultRegs.ADCRESULT5
+#define VcG_HCPL        AdcdResultRegs.ADCRESULT3 //D3
 
-#define IA_INV_LEM      AdcaResultRegs.ADCRESULT1
-#define IB_INV_LEM      AdcaResultRegs.ADCRESULT0
-#define IC_INV_LEM      AdcaResultRegs.ADCRESULT4
-#define IZ_INV_LEM      AdcbResultRegs.ADCRESULT4
+#define IA_INV_LEM      AdcdResultRegs.ADCRESULT0 //D0
+#define IB_INV_LEM      AdcdResultRegs.ADCRESULT1 //D1
+#define IC_INV_LEM      AdcbResultRegs.ADCRESULT2 //B2
+#define IZ_INV_LEM      AdcbResultRegs.ADCRESULT0 //B0
 
 #define T_Us             0.002 // Time sample voltage
 #define Ti               0.00002 // Time sample current 0.0000154
@@ -288,34 +276,30 @@
 #define Wmax            (2.0*PI*BASE_FREQ)
 
 // CMPSS FLC Permission
-#define CMPSS_PROTECT_UDC_UPPER         1 // Da test co the bao ve duoc, bv ok
+#define CMPSS_PROTECT_UDC_UPPER         0
 
-#define CMPSS_PROTECT_VaG_UPPER         0 // Da test co the bao ve duoc
-#define CMPSS_PROTECT_VaG_LOWER         0 // Da test co the bao ve duoc
+#define CMPSS_PROTECT_VaG_UPPER         0//1
+#define CMPSS_PROTECT_VaG_LOWER         0//1
 
-#define CMPSS_PROTECT_VbG_UPPER         1 // Da test co the bao ve duoc, bv ok
-#define CMPSS_PROTECT_VbG_LOWER         1 // Da test co the bao ve duoc, bv ok
+#define CMPSS_PROTECT_VbG_UPPER         0
+#define CMPSS_PROTECT_VbG_LOWER         0
 
-#define CMPSS_PROTECT_VcG_UPPER         0 //
-#define CMPSS_PROTECT_VcG_LOWER         0 //
+#define CMPSS_PROTECT_VcG_UPPER         0
+#define CMPSS_PROTECT_VcG_LOWER         0
 
-#define CMPSS_PROTECT_Ia_inv_UPPER      0
-#define CMPSS_PROTECT_Ia_inv_LOWER      0
+#define CMPSS_PROTECT_Ia_inv_UPPER      0//1
+#define CMPSS_PROTECT_Ia_inv_LOWER      0//1
 
 #define CMPSS_PROTECT_Ib_inv_UPPER      0
 #define CMPSS_PROTECT_Ib_inv_LOWER      0
 
-#define CMPSS_PROTECT_Ic_inv_UPPER      1 // Da test co the bao ve duoc, bv ok
-#define CMPSS_PROTECT_Ic_inv_LOWER      1 // Da test co the bao ve duoc, bv ok
+#define CMPSS_PROTECT_Ic_inv_UPPER      0//1
+#define CMPSS_PROTECT_Ic_inv_LOWER      0//1
 
 // CMPSS FLC Setting
-extern volatile float CMPSS_Udc_New_Protecion;
+extern volatile float CMPSS_Vg_Rms_Protection;
 
-extern volatile float CMPSS_Udc_Offset_New_Protecion;
-extern volatile float CMPSS_Vg_Offset_New_Protecion;
-
-extern volatile float CMPSS_Ig_inv_New_Protecion;
-
+extern volatile float CMPSS_Ig_Rms_Protecion;
 // CMPSS TPC Setting
 
 #endif /* _PV_SETTING_H_ */

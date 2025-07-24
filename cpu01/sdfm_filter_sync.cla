@@ -483,7 +483,7 @@ __interrupt void Cla1Task1 ( void )
             PLL_PHASE_CLA_V3_MACRO(pll_3phase)
     #endif
 
-        #if (BUILDLEVEL == LEVEL1 || BUILDLEVEL == LEVEL3 || BUILDLEVEL == LEVEL4)
+        #if (BUILDLEVEL == LEVEL1 || BUILDLEVEL == LEVEL3 || BUILDLEVEL == LEVEL4 || BUILDLEVEL == LEVEL7 || BUILDLEVEL == LEVEL8)
             if(CpuToCLA.EnableFlag == 1)
             {
                 START_CONTROLLER = 1;
@@ -493,10 +493,10 @@ __interrupt void Cla1Task1 ( void )
     }
     if(START_CONTROLLER == 1)
     {
-        EPwm4Regs.DBCTL.bit.OUT_MODE = 3; // Dead-band áp dụng cho cả hai tín hiệu PWM A và B.
-        EPwm6Regs.DBCTL.bit.OUT_MODE = 3;
-        EPwm5Regs.DBCTL.bit.OUT_MODE = 3;
-        EPwm8Regs.DBCTL.bit.OUT_MODE = 3;
+        EPwm1Regs.DBCTL.bit.OUT_MODE = 3; // Dead-band áp dụng cho cả hai tín hiệu PWM A và B.
+        EPwm3Regs.DBCTL.bit.OUT_MODE = 3;
+        EPwm2Regs.DBCTL.bit.OUT_MODE = 3;
+        EPwm4Regs.DBCTL.bit.OUT_MODE = 3;
 
         #if(BUILDLEVEL == LEVEL1)
 
@@ -504,7 +504,7 @@ __interrupt void Cla1Task1 ( void )
             rg_har_1st.Freq = 50.0/150.0;
             RAMP_GEN_CLA_MACRO(rg_har_1st)
 
-            rc_Ref.TargetValue = 230.0/400.0;
+            rc_Ref.TargetValue = 220.0/400.0;
             //rc_Ref.TargetValue = CpuToCLA.VdTesting/400.0;
             RC_CLA_MACRO(rc_Ref)
 
@@ -545,10 +545,10 @@ __interrupt void Cla1Task1 ( void )
 
     #endif
 
-            EPwm4Regs.CMPA.bit.CMPA = (Uint16)(pwm.MfuncA1*pwm.PeriodMax);
-            EPwm6Regs.CMPA.bit.CMPA = (Uint16)(pwm.MfuncA2*pwm.PeriodMax);                                                                                         \
-            EPwm5Regs.CMPA.bit.CMPA = (Uint16)(pwm.MfuncB1*pwm.PeriodMax);
-            EPwm8Regs.CMPA.bit.CMPA = (Uint16)(pwm.MfuncB2*pwm.PeriodMax);
+            EPwm1Regs.CMPA.bit.CMPA = (Uint16)(pwm.MfuncA1*pwm.PeriodMax);
+            EPwm3Regs.CMPA.bit.CMPA = (Uint16)(pwm.MfuncA2*pwm.PeriodMax);                                                                                         \
+            EPwm2Regs.CMPA.bit.CMPA = (Uint16)(pwm.MfuncB1*pwm.PeriodMax);
+            EPwm4Regs.CMPA.bit.CMPA = (Uint16)(pwm.MfuncB2*pwm.PeriodMax);
 
         #endif
 
@@ -610,11 +610,11 @@ __interrupt void Cla1Task1 ( void )
             pwm.MfuncB1 = Svm3d.dc;
             pwm.MfuncB2 = Svm3d.dn;
 
-            EPwm4Regs.CMPA.bit.CMPA = (Uint16)(pwm.MfuncA1*pwm.PeriodMax);
-            EPwm6Regs.CMPA.bit.CMPA = (Uint16)(pwm.MfuncA2*pwm.PeriodMax);
+            EPwm1Regs.CMPA.bit.CMPA = (Uint16)(pwm.MfuncA1*pwm.PeriodMax);
+            EPwm3Regs.CMPA.bit.CMPA = (Uint16)(pwm.MfuncA2*pwm.PeriodMax);
 
-            EPwm5Regs.CMPA.bit.CMPA = (Uint16)(pwm.MfuncB1*pwm.PeriodMax);
-            EPwm8Regs.CMPA.bit.CMPA = (Uint16)(pwm.MfuncB2*pwm.PeriodMax);
+            EPwm2Regs.CMPA.bit.CMPA = (Uint16)(pwm.MfuncB1*pwm.PeriodMax);
+            EPwm4Regs.CMPA.bit.CMPA = (Uint16)(pwm.MfuncB2*pwm.PeriodMax);
 
             if(pi_curr_id.OUT > 0.99 || pi_curr_id.OUT < -0.99)controller_error_curr_isd++;
             else controller_error_curr_isd = 0;
@@ -730,10 +730,10 @@ __interrupt void Cla1Task1 ( void )
 
     #endif
 
-            EPwm4Regs.CMPA.bit.CMPA = (Uint16)(pwm.MfuncA1*pwm.PeriodMax);
-            EPwm6Regs.CMPA.bit.CMPA = (Uint16)(pwm.MfuncA2*pwm.PeriodMax);
-            EPwm5Regs.CMPA.bit.CMPA = (Uint16)(pwm.MfuncB1*pwm.PeriodMax);
-            EPwm8Regs.CMPA.bit.CMPA = (Uint16)(pwm.MfuncB2*pwm.PeriodMax);
+            EPwm1Regs.CMPA.bit.CMPA = (Uint16)(pwm.MfuncA1*pwm.PeriodMax);
+            EPwm3Regs.CMPA.bit.CMPA = (Uint16)(pwm.MfuncA2*pwm.PeriodMax);
+            EPwm2Regs.CMPA.bit.CMPA = (Uint16)(pwm.MfuncB1*pwm.PeriodMax);
+            EPwm4Regs.CMPA.bit.CMPA = (Uint16)(pwm.MfuncB2*pwm.PeriodMax);
         #endif
 
         #if (BUILDLEVEL == LEVEL7)
@@ -797,10 +797,10 @@ __interrupt void Cla1Task1 ( void )
             pwm.MfuncB1 = Svm3d.dc;
             pwm.MfuncB2 = Svm3d.dn;
 
-            EPwm4Regs.CMPA.bit.CMPA = (Uint16)(pwm.MfuncA1*pwm.PeriodMax);
-            EPwm6Regs.CMPA.bit.CMPA = (Uint16)(pwm.MfuncA2*pwm.PeriodMax);
-            EPwm5Regs.CMPA.bit.CMPA = (Uint16)(pwm.MfuncB1*pwm.PeriodMax);
-            EPwm8Regs.CMPA.bit.CMPA = (Uint16)(pwm.MfuncB2*pwm.PeriodMax);
+            EPwm1Regs.CMPA.bit.CMPA = (Uint16)(pwm.MfuncA1*pwm.PeriodMax);
+            EPwm3Regs.CMPA.bit.CMPA = (Uint16)(pwm.MfuncA2*pwm.PeriodMax);
+            EPwm2Regs.CMPA.bit.CMPA = (Uint16)(pwm.MfuncB1*pwm.PeriodMax);
+            EPwm4Regs.CMPA.bit.CMPA = (Uint16)(pwm.MfuncB2*pwm.PeriodMax);
 
         #endif
 
@@ -888,43 +888,43 @@ __interrupt void Cla1Task1 ( void )
             pwm.MfuncB1 = Svm3d.dc;
             pwm.MfuncB2 = Svm3d.dn;
 
-            EPwm4Regs.CMPA.bit.CMPA = (Uint16)(pwm.MfuncA1*pwm.PeriodMax);
-            EPwm6Regs.CMPA.bit.CMPA = (Uint16)(pwm.MfuncA2*pwm.PeriodMax);
-            EPwm5Regs.CMPA.bit.CMPA = (Uint16)(pwm.MfuncB1*pwm.PeriodMax);
-            EPwm8Regs.CMPA.bit.CMPA = (Uint16)(pwm.MfuncB2*pwm.PeriodMax);
+            EPwm1Regs.CMPA.bit.CMPA = (Uint16)(pwm.MfuncA1*pwm.PeriodMax);
+            EPwm3Regs.CMPA.bit.CMPA = (Uint16)(pwm.MfuncA2*pwm.PeriodMax);
+            EPwm2Regs.CMPA.bit.CMPA = (Uint16)(pwm.MfuncB1*pwm.PeriodMax);
+            EPwm4Regs.CMPA.bit.CMPA = (Uint16)(pwm.MfuncB2*pwm.PeriodMax);
 
         #endif
     }
     else
     {
+        EPwm1Regs.DBCTL.bit.OUT_MODE = 0; // Tắt chức năng Dead Band đầu ra (Dead Band output mode).
+        EPwm3Regs.DBCTL.bit.OUT_MODE = 0; // Tắt chức năng Dead Band đầu ra (Dead Band output mode).
+        EPwm2Regs.DBCTL.bit.OUT_MODE = 0; // Tắt chức năng Dead Band đầu ra (Dead Band output mode).
         EPwm4Regs.DBCTL.bit.OUT_MODE = 0; // Tắt chức năng Dead Band đầu ra (Dead Band output mode).
-        EPwm6Regs.DBCTL.bit.OUT_MODE = 0; // Tắt chức năng Dead Band đầu ra (Dead Band output mode).
-        EPwm5Regs.DBCTL.bit.OUT_MODE = 0; // Tắt chức năng Dead Band đầu ra (Dead Band output mode).
-        EPwm8Regs.DBCTL.bit.OUT_MODE = 0; // Tắt chức năng Dead Band đầu ra (Dead Band output mode).
+
+        EPwm1Regs.AQCTLA.bit.CAU = AQ_CLEAR;
+        EPwm1Regs.AQCTLA.bit.CAD = AQ_SET;
+
+        EPwm3Regs.AQCTLA.bit.CAU = AQ_CLEAR;
+        EPwm3Regs.AQCTLA.bit.CAD = AQ_SET;
+
+        EPwm2Regs.AQCTLA.bit.CAU = AQ_CLEAR;
+        EPwm2Regs.AQCTLA.bit.CAD = AQ_SET;
 
         EPwm4Regs.AQCTLA.bit.CAU = AQ_CLEAR;
         EPwm4Regs.AQCTLA.bit.CAD = AQ_SET;
 
-        EPwm6Regs.AQCTLA.bit.CAU = AQ_CLEAR;
-        EPwm6Regs.AQCTLA.bit.CAD = AQ_SET;
+        EPwm1Regs.CMPA.bit.CMPA = 0;
+        EPwm1Regs.CMPB.bit.CMPB = 0;
 
-        EPwm5Regs.AQCTLA.bit.CAU = AQ_CLEAR;
-        EPwm5Regs.AQCTLA.bit.CAD = AQ_SET;
+        EPwm3Regs.CMPA.bit.CMPA = 0;
+        EPwm3Regs.CMPB.bit.CMPB = 0;
 
-        EPwm8Regs.AQCTLA.bit.CAU = AQ_CLEAR;
-        EPwm8Regs.AQCTLA.bit.CAD = AQ_SET;
+        EPwm2Regs.CMPA.bit.CMPA = 0;
+        EPwm2Regs.CMPB.bit.CMPB = 0;
 
         EPwm4Regs.CMPA.bit.CMPA = 0;
         EPwm4Regs.CMPB.bit.CMPB = 0;
-
-        EPwm6Regs.CMPA.bit.CMPA = 0;
-        EPwm6Regs.CMPB.bit.CMPB = 0;
-
-        EPwm5Regs.CMPA.bit.CMPA = 0;
-        EPwm5Regs.CMPB.bit.CMPB = 0;
-
-        EPwm8Regs.CMPA.bit.CMPA = 0;
-        EPwm8Regs.CMPB.bit.CMPB = 0;
 
         // RESET cac bien trong thuat toan
         rg_har_1st.Angle = 0;

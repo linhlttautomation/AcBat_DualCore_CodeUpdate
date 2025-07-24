@@ -5,3 +5,7 @@
 14/7/2025:
 1. Test DAC nhưng chưa được
 2. Truyền được nhiều giá trị giữa 2 CPU dùng MSGRAM, tuy nhiên chưa fix được lỗi khởi tạo giá trị của mảng
+24/7/2025:
+1. Tạo form code AC Battery V2
+2. Cấu hình AC Bat LED Status
+3. Cấu hình bảo vệ Ubat under

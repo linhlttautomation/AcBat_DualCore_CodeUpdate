@@ -193,6 +193,7 @@ typedef struct
     unsigned int Iz_upper;
     unsigned int Iz_lower;
     unsigned int Udc_under_modulation;
+    unsigned int Ubat_under;
 
 }PROTECT_CHANEL;
 #endif
