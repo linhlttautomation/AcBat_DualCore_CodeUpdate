@@ -98,8 +98,11 @@ Uint16 RunTask8Flag = 0;
 
 Uint16 FLC_RstFlg = 0;
 
-Uint16 test;
+float test;
 float Ubat_TPC;
+Uint16 Epwm1 = 0;
+Uint16 AdcB0 = 0;
+Uint16 count_FLC_start_up = 0;
 
 volatile float CMPSS_Vg_Rms_Protection = 200.0;
 volatile float CMPSS_Ig_Rms_Protecion = 8.0;
@@ -189,6 +192,21 @@ __interrupt void Cpu_Timer0_ISR(void)
     PieCtrlRegs.PIEACK.all = PIEACK_GROUP1; // Acknowledge interrupt
 }
 
+__interrupt void epwm1_isr(void)
+{
+    Epwm1++;
+
+    EPwm1Regs.ETCLR.bit.INT = 1;
+    PieCtrlRegs.PIEACK.all = PIEACK_GROUP3;
+}
+
+__interrupt void adc_isr(void)
+{
+    AdcB0++;
+
+    AdcbRegs.ADCINTFLGCLR.bit.ADCINT1 = 1;
+    PieCtrlRegs.PIEACK.all = PIEACK_GROUP1;
+}
 //void InitWatchdog(void)
 //{
 //    EALLOW;
@@ -290,7 +308,7 @@ void Init_ADC_B()
     // Trigger CLA
     AdcbRegs.ADCINTSOCSEL1.all = 0x0000;          // No ADCInterrupt will trigger SOCx
     AdcbRegs.ADCINTSOCSEL2.all = 0x0000;
-    AdcbRegs.ADCINTSEL1N2.bit.INT1SEL = 1;      // EOC1 is trigger for ADCINT1
+    AdcbRegs.ADCINTSEL1N2.bit.INT1SEL = 0;      // EOC1 is trigger for ADCINT1
     AdcbRegs.ADCINTSEL1N2.bit.INT1E = 1;        // enable ADC interrupt 1
     AdcbRegs.ADCINTSEL1N2.bit.INT1CONT = 1;     // ADCINT1 pulses are generated whenever an EOC pulse is generated irrespective of whether the flag bit is cleared or not.
                                                 // 0 No further ADCINT2 pulses are generated until ADCINT2 flag (in ADCINTFLG register) is cleared by user.
@@ -610,6 +628,9 @@ int main(void)
     Uint16  HLT, LLT;
 
     int period = 1000;
+    int duty_relay = 2500;
+    int duty_relay_current = 2500;
+    int relay_activated = 0;
 
     #if(SET_MODE_RUN == THREE_PHASE_MODE)
         int deadtime = 60;
@@ -662,6 +683,7 @@ int main(void)
     CpuSysRegs.PCLKCR2.bit.EPWM3 = 1;
     CpuSysRegs.PCLKCR2.bit.EPWM2 = 1;
     CpuSysRegs.PCLKCR2.bit.EPWM4 = 1;
+    CpuSysRegs.PCLKCR2.bit.EPWM6 = 1;
 
     CpuSysRegs.PCLKCR13.bit.ADC_B = 1;
     CpuSysRegs.PCLKCR13.bit.ADC_D = 1;
@@ -975,10 +997,10 @@ int main(void)
     EPwm4Regs.TBCTR = 0;
     EPwm4Regs.TBPRD = period;
 
-    EPwm6Regs.CMPA.bit.CMPA = 2500;
+    EPwm6Regs.CMPA.bit.CMPA = 0;
     EPwm6Regs.TBPHS.bit.TBPHS = 0;
     EPwm6Regs.TBCTR = 0;
-    EPwm6Regs.TBPRD = 2500;
+    EPwm6Regs.TBPRD = duty_relay;
 
     /* Counter-Compare (CC) */
     EPwm1Regs.CMPCTL.all = 0x000C;
@@ -1254,6 +1276,18 @@ int main(void)
        EDIS;
     #endif
 
+    #if(ALLOW_EPWM_INT == 1)
+       EALLOW;
+       PieVectTable.EPWM1_INT = &epwm1_isr;
+       EDIS;
+    #endif
+
+    #if(ALLOW_ADC_INT == 1)
+       EALLOW;
+       PieVectTable.ADCB1_INT = &adc_isr;
+       EDIS;
+    #endif
+
     #if(ALLOW_WATCHDOG_TIMER == 1)
        PieCtrlRegs.PIECTRL.bit.ENPIE = 1;     // Bật PIE
        PieCtrlRegs.PIEIER1.bit.INTx8 = 1;     // Cho phép ngắt Watchdog (WAKEINT)
@@ -1264,6 +1298,20 @@ int main(void)
         PieCtrlRegs.PIEIER1.bit.INTx7 = 1;  // Timer0 interrupt = Group 1, INT7
         IER |= M_INT1;                      // Enable group 1 interrupt
         EINT;                               // Enable global interrupt
+    #endif
+
+    #if(ALLOW_EPWM_INT == 1)
+       EALLOW;
+       IER |= M_INT3;
+       PieCtrlRegs.PIEIER3.bit.INTx1 = 1;
+       EDIS;
+    #endif
+
+    #if(ALLOW_EPWM_INT == 1)
+       EALLOW;
+       IER |= M_INT1;
+       PieCtrlRegs.PIEIER1.bit.INTx2 = 1;
+       EDIS;
     #endif
 
 //
@@ -1455,6 +1503,26 @@ int main(void)
 
     while(1)
     {
+        #if(ALLOW_FLC_AUTO_START_UP == 1)
+            if (1.0*(UDC_HCPL - 4)*800.0/(4096.0 - 4) > 300.0f)
+            {
+                if (e_FLC_Sts != FLC_ON)
+                {
+                    count_FLC_start_up++;
+
+                    if (count_FLC_start_up > 150)
+                    {
+                        e_FLC_Sts = FLC_ON;
+                        count_FLC_start_up = 0;
+                    }
+                }
+            }
+            else
+            {
+                count_FLC_start_up = 0;
+            }
+        #endif
+
         if(e_FLC_Sts == FLC_ON)
         {
             START_FLC = 1;
@@ -1466,7 +1534,7 @@ int main(void)
 
         if(START_FLC == 1 || e_FLC_Sts == FLC_ON)
         {
-            #if(BUILDLEVEL == LEVEL1 ||BUILDLEVEL == LEVEL2|| BUILDLEVEL == LEVEL3 || BUILDLEVEL == LEVEL4||BUILDLEVEL == LEVEL5||BUILDLEVEL == LEVEL6||BUILDLEVEL == LEVEL7||BUILDLEVEL == LEVEL8)
+            #if(BUILDLEVEL == LEVEL1 ||BUILDLEVEL == LEVEL2|| BUILDLEVEL == LEVEL3 || BUILDLEVEL == LEVEL4 || BUILDLEVEL == LEVEL5 || BUILDLEVEL == LEVEL6 || BUILDLEVEL == LEVEL7 || BUILDLEVEL == LEVEL8)
                 CpuToCLA.EnableFlag = 1;
             #endif
         }
@@ -1614,12 +1682,6 @@ int main(void)
             FLC_RstFlg = 0;
         }
 
-        if(ClrPrtFLg_Fst == 0) // Clear protect CMPSS first after debug
-        {
-            ClearProtectFlagFcn();
-            ClrPrtFLg_Fst = 1;
-        }
-
         if(ClrPrtFlg == 1) // Flag reset protect CMPSS
         {
             ClearProtectFlagFcn();
@@ -1628,21 +1690,21 @@ int main(void)
         #if(BUILDLEVEL == LEVEL4)
 //            if (AdcaResultRegs.ADCRESULT14 > 4)
 //            {
-//                Ubat_TPC = 400.0*1.0*(AdcaResultRegs.ADCRESULT14 - 4)/(4096.0 - 4);
+//                Ubat_TPC = 200.0*1.0*(AdcaResultRegs.ADCRESULT14 - 4)/(4096.0 - 4);
 //            }
 //            else Ubat_TPC = 0.0;
 
-            if(Ubat_TPC < 72.0)
-            {
-                e_FLC_Sts = FLC_OFF;
-                START_FLC = 0;
-                CpuToCLA.EnableFlag = 0;
-                protect_chanel.Ubat_under = 1;
-            }
-            else
-            {
-                protect_chanel.Ubat_under = 0;
-            }
+//            if(Ubat_TPC < 72.0)
+//            {
+//                e_FLC_Sts = FLC_OFF;
+//                START_FLC = 0;
+//                CpuToCLA.EnableFlag = 0;
+//                protect_chanel.Ubat_under = 1;
+//            }
+//            else
+//            {
+//                protect_chanel.Ubat_under = 0;
+//            }
 
             if(ClaToCPU.Udc_under_modulation == 1)
             {
@@ -1667,15 +1729,30 @@ int main(void)
 
         #if(SET_MODE_RUN == THREE_PHASE_MODE)
 
-            ON_RELAY = 1;
+//            ON_RELAY = 1;
 
             if (ON_RELAY == 1)
             {
-                EPwm6Regs.CMPA.bit.CMPA = 2500;
+                if (relay_activated == 0)
+                {
+                    duty_relay_current = duty_relay;
+                    relay_activated = 1;
+                }
+                EPwm6Regs.CMPA.bit.CMPA = duty_relay_current;
+                if (duty_relay_current > duty_relay/2)
+                {
+                    duty_relay_current -= 10;
+                    if (duty_relay_current < duty_relay/2)
+                    {
+                        duty_relay_current = duty_relay/2;
+                    }
+                }
             }
             else
             {
                 EPwm6Regs.CMPA.bit.CMPA = 0;
+                duty_relay_current = 0;
+                relay_activated = 0;
             }
 
         #endif

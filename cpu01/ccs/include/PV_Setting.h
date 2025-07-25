@@ -19,7 +19,7 @@
 #define LEVEL8        8           // Vong ap noi luoi 3P4W
 
 // ---------------------------------------------------
-#define BUILDLEVEL    LEVEL4
+#define BUILDLEVEL    LEVEL1
 // ---------------------------------------------------
 
 #define SINGLE_PHASE_MODE       1
@@ -54,6 +54,9 @@
 #define ALLOW_TIMER0                1
 #define ALLOW_CAN                   0
 #define ALLLOW_DAC                  0
+#define ALLOW_EPWM_INT              1
+#define ALLOW_ADC_INT               1
+#define ALLOW_FLC_AUTO_START_UP     0
 
 // ---------------------------------------------------
 #define MODE_MODULATION_SVM2D       2
@@ -92,8 +95,8 @@
 
 #define IA_INV_LEM      AdcdResultRegs.ADCRESULT0 //D0
 #define IB_INV_LEM      AdcdResultRegs.ADCRESULT1 //D1
-#define IC_INV_LEM      AdcbResultRegs.ADCRESULT2 //B2
-#define IZ_INV_LEM      AdcbResultRegs.ADCRESULT0 //B0
+#define IC_INV_LEM      AdcbResultRegs.ADCRESULT0 //B2
+#define IZ_INV_LEM      AdcbResultRegs.ADCRESULT2 //B0
 
 #define T_Us             0.002 // Time sample voltage
 #define Ti               0.00002 // Time sample current 0.0000154
