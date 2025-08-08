@@ -30,6 +30,7 @@
 #include "PARK_1PHASE_CLA_PE.h"
 #include "PLL_1PHASE_CLA_PE.h"
 #include "PR_new.h"
+#include "ButterWorthFilter.h"
 //#include "Kalman.h"
 #include "PLL_PHASE_CLA_PE.h"
 
@@ -106,6 +107,15 @@ volatile LOWPASSFILTER  filter_VbG;
 //
 #pragma DATA_SECTION(filter_VcG,"CLADataLS0");
 volatile LOWPASSFILTER  filter_VcG;
+
+#pragma DATA_SECTION(filter_Ia,"CLADataLS0");
+volatile LOWPASSFILTER  filter_Ia;
+
+#pragma DATA_SECTION(filter_Ib,"CLADataLS0");
+volatile LOWPASSFILTER  filter_Ib;
+
+#pragma DATA_SECTION(filter_Ic,"CLADataLS0");
+volatile LOWPASSFILTER  filter_Ic;
 
 #pragma DATA_SECTION(filter_Usd,"CLADataLS0");
 volatile LOWPASSFILTER  filter_Usd;
@@ -402,6 +412,18 @@ __interrupt void Cla1Task1 ( void )
         LOWPASSFILTER_MACRO(filter_VcG);
         adc_filter.Vc_G = filter_VcG.Vout;
 
+        filter_Ia.Vin = AdcValue.Ia_inv;
+        LOWPASSFILTER_MACRO(filter_Ia);
+        adc_filter.Ia_inv = filter_Ia.Vout;
+
+        filter_Ib.Vin = AdcValue.Ib_inv;
+        LOWPASSFILTER_MACRO(filter_Ib);
+        adc_filter.Ib_inv = filter_Ib.Vout;
+
+        filter_Ic.Vin = AdcValue.Ic_inv;
+        LOWPASSFILTER_MACRO(filter_Ic);
+        adc_filter.Ic_inv = filter_Ic.Vout;
+
         #if(SET_MODE_READ == READ_VOLTAGE_AC_AFTER_LPF)
             ClaToCPU.ADC_CPU.datalog1  = adc_filter.Va_G;
             ClaToCPU.ADC_CPU.datalog2  = adc_filter.Vb_G;
@@ -421,9 +443,9 @@ __interrupt void Cla1Task1 ( void )
         #endif
 
         #if(SET_MODE_READ == READ_CURRENT)
-            ClaToCPU.ADC_CPU.datalog1  = AdcValue.Ia_inv;
-            ClaToCPU.ADC_CPU.datalog2  = AdcValue.Ib_inv;
-            ClaToCPU.ADC_CPU.datalog3  = AdcValue.Ic_inv;
+            ClaToCPU.ADC_CPU.datalog1  = adc_filter.Ia_inv;
+            ClaToCPU.ADC_CPU.datalog2  = adc_filter.Ib_inv;
+            ClaToCPU.ADC_CPU.datalog3  = adc_filter.Ic_inv;
         #endif
 
         #if(SET_MODE_READ == READ_VOLTAGE_AC_AFTER_KALMAN)
@@ -436,12 +458,6 @@ __interrupt void Cla1Task1 ( void )
             ClaToCPU.ADC_CPU.datalog1  = pi_curr_id.OUT;
             ClaToCPU.ADC_CPU.datalog2  = pi_curr_iq.OUT;
             ClaToCPU.ADC_CPU.datalog3  = pi_curr_iz.OUT;
-        #endif
-
-        #if(SET_MODE_READ == READ_VOLTAGE_AC_TEST_VB)
-            ClaToCPU.ADC_CPU.datalog1  = adc_filter.Va_G + adc_filter.Vc_G;
-            ClaToCPU.ADC_CPU.datalog2  = adc_filter.Vb_G;
-            ClaToCPU.ADC_CPU.datalog3  = 1 - adc_filter.Va_G - adc_filter.Vc_G;
         #endif
 
         #if(BUILDLEVEL == LEVEL4)
@@ -633,9 +649,12 @@ __interrupt void Cla1Task1 ( void )
             rc_Ref.TargetValue = can2*CpuToCLA.VdTesting/400.0; // Dat gia tri Ud*
             RC_CLA_MACRO(rc_Ref) // Ramp gia tri Ud*
 
-            clarke_curr.As  = AdcValue.Ia_inv;  // Phase A curr
-            clarke_curr.Bs  = AdcValue.Ib_inv;  // Phase B curr
-            clarke_curr.Cs  = AdcValue.Ic_inv;  // Phase C curr
+//            clarke_curr.As  = AdcValue.Ia_inv;  // Phase A curr
+//            clarke_curr.Bs  = AdcValue.Ib_inv;  // Phase B curr
+//            clarke_curr.Cs  = AdcValue.Ic_inv;  // Phase C curr
+            clarke_curr.As  = adc_filter.Ia_inv;  // Phase A curr
+            clarke_curr.Bs  = adc_filter.Ib_inv;  // Phase B curr
+            clarke_curr.Cs  = adc_filter.Ic_inv;  // Phase C curr
             CLARKE_3PHASE_CLA_V3_MARCO(clarke_curr)
 
             clarke_volt.As  = adc_filter.Va_G;  // Phase A volt
@@ -734,6 +753,7 @@ __interrupt void Cla1Task1 ( void )
             EPwm6Regs.CMPA.bit.CMPA = (Uint16)(pwm.MfuncA2*pwm.PeriodMax);
             EPwm5Regs.CMPA.bit.CMPA = (Uint16)(pwm.MfuncB1*pwm.PeriodMax);
             EPwm8Regs.CMPA.bit.CMPA = (Uint16)(pwm.MfuncB2*pwm.PeriodMax);
+
         #endif
 
         #if (BUILDLEVEL == LEVEL7)
@@ -1467,22 +1487,8 @@ __interrupt void Cla1Task8 ( void )
 
         RC_INT_MACRO(rc_Ref)
 
-        #if(VAC_REF == 10 || VAC_REF == 25 || VAC_REF == 35 || VAC_REF == 50 || VAC_REF == 75)
-            rc_Ref.StepRampDec = (0.0005/2)/400.0;
-            rc_Ref.StepRampInc = (0.0005/2)/400.0;
-
-        #elif(VAC_REF == 100) // Chia 1 để lấy kết quả ramp không quá lớn, lấy được kết quả
-            rc_Ref.StepRampDec = (0.0005/2)/400.0;
-            rc_Ref.StepRampInc = (0.0005/2)/400.0;
-
-        #elif(VAC_REF == 120)
-            rc_Ref.StepRampDec = (0.0005/2)/400.0;
-            rc_Ref.StepRampInc = (0.0005/2)/400.0;
-
-        #else // Trường hợp VAC_REF không rơi vào những cái đặt thì vẫn có giá trị
-            rc_Ref.StepRampDec = (0.0005/5)/400.0;
-            rc_Ref.StepRampInc = (0.0005/5)/400.0;
-        #endif
+        rc_Ref.StepRampDec = (0.0005/5)/400.0;
+        rc_Ref.StepRampInc = (0.0005/5)/400.0;
 #endif
 
     #if(BUILDLEVEL == LEVEL7)
@@ -1642,6 +1648,25 @@ __interrupt void Cla1Task8 ( void )
     filter_VcG.Vin = 0;
     filter_VcG.Vout_k1 = 0;
     filter_VcG.Vout = 0;
+
+    filter_Ia.Heso_out = 0.1373;
+    filter_Ia.Heso_in = 0.8627;
+    filter_Ia.Vin = 0;
+    filter_Ia.Vout_k1 = 0;
+    filter_Ia.Vout = 0;
+
+    filter_Ib.Heso_out = 0.1373;
+    filter_Ib.Heso_in = 0.8627;
+    filter_Ib.Vin = 0;
+    filter_Ib.Vout_k1 = 0;
+    filter_Ib.Vout = 0;
+
+    filter_Ic.Heso_out = 0.1373;
+    filter_Ic.Heso_in = 0.8627;
+    filter_Ic.Vin = 0;
+    filter_Ic.Vout_k1 = 0;
+    filter_Ic.Vout = 0;
+
 
 /*
     filter_VaG.Heso_out = 1.0/(1.0 + 0.0001*2*PI*10000);

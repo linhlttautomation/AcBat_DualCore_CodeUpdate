@@ -97,10 +97,10 @@ volatile float CMPSS_Udc_Offset_New_Protecion = 0.0;
 volatile float CMPSS_Vg_Offset_New_Protecion = 224.0;
 volatile float CMPSS_Ig_inv_New_Protecion = 8.0;*/ // Bao ve 300Vdc-92Vrms-Tai32Ohm-1kW
 
-volatile float CMPSS_Udc_New_Protecion = 350.0;
+volatile float CMPSS_Udc_New_Protecion = 450.0;
 volatile float CMPSS_Udc_Offset_New_Protecion = 0.0;
 volatile float CMPSS_Vg_Offset_New_Protecion = 0.0;
-volatile float CMPSS_Ig_inv_New_Protecion = 8.0; // Bao ve 320Vdc-103Vrms-Tai32Ohm-1kw
+volatile float CMPSS_Ig_inv_New_Protecion = 8.0; // Bao ve 400Vdc-103Vrms-Tai32Ohm-1kw
 
 volatile Uint32 seconds_counter_cmpss = 0;
 volatile Uint32 CMPSS_Protect_Time = 0;
@@ -1189,37 +1189,57 @@ int main(void)
     EPwm8Regs.DBFED.bit.DBFED = deadtime;
     EPwm8Regs.DBRED.bit.DBRED = deadtime;
 
+    #if(ADC_TRIGGER_MODE != ADC_TRIGGER_ZERO_PRD)
 
-    /* Event Trigger (ET) */
+        /* Event Trigger (ET) */
+        #if(ADC_TRIGGER_MODE == ADC_TRIGGER_CMPB)
+            EPwm4Regs.CMPB.bit.CMPB = period/2;
+        #endif
 
-    #if(ADC_TRIGGER_MODE == ADC_TRIGGER_CMPB)
-        EPwm4Regs.CMPB.bit.CMPB = period/2;
+        EPwm4Regs.ETSEL.bit.SOCAEN = 1;
+
+        #if(ADC_TRIGGER_MODE == ADC_TRIGGER_ZERO)
+            EPwm4Regs.ETSEL.bit.SOCASEL = ET_CTR_ZERO;
+        #elif(ADC_TRIGGER_MODE == ADC_TRIGGER_PRD)
+            EPwm4Regs.ETSEL.bit.SOCASEL = ET_CTR_PRD;
+        #elif(ADC_TRIGGER_MODE == ADC_TRIGGER_CMPB)
+            EPwm4Regs.ETSEL.bit.SOCASEL = ET_CTRU_CMPB;
+        #elif(ADC_TRIGGER_MODE == ADC_TRIGGER_CMPA)
+            EPwm4Regs.ETSEL.bit.SOCASEL = ET_CTRU_CMPA;
+        #endif
+
+        EPwm4Regs.ETPS.bit.SOCAPRD = ET_1ST;
+        EPwm4Regs.ETCLR.bit.SOCA = 1;
+        EPwm4Regs.ETPS.bit.SOCACNT = ET_1ST;
+
+        // Enable CNT_zero interrupt using EPWM4 Time-base
+        EPwm4Regs.ETSEL.bit.INTEN = 1;
+        EPwm4Regs.ETSEL.bit.INTSEL = ET_CTR_ZERO;
+        EPwm4Regs.ETPS.bit.INTPRD = ET_1ST;
+        EPwm4Regs.ETPS.bit.INTCNT = ET_1ST;
+        EPwm4Regs.ETCLR.bit.INT = 1;
+
     #endif
 
-    EPwm4Regs.ETSEL.bit.SOCAEN = 1;
+    #if(ADC_TRIGGER_MODE == ADC_TRIGGER_ZERO_PRD)
 
-    #if(ADC_TRIGGER_MODE == ADC_TRIGGER_ZERO)
-        EPwm4Regs.ETSEL.bit.SOCASEL = ET_CTR_ZERO;
-    #elif(ADC_TRIGGER_MODE == ADC_TRIGGER_PRD)
-        EPwm4Regs.ETSEL.bit.SOCASEL = ET_CTR_PRD;
-    #elif(ADC_TRIGGER_MODE == ADC_TRIGGER_CMPB)
-        EPwm4Regs.ETSEL.bit.SOCASEL = ET_CTRU_CMPB;
-    #elif(ADC_TRIGGER_MODE == ADC_TRIGGER_CMPA)
-        EPwm4Regs.ETSEL.bit.SOCASEL = ET_CTRU_CMPA;
+        /* Event Trigger (ET) */
+        EPwm4Regs.ETSEL.bit.SOCAEN = 1;
+        EPwm4Regs.ETSEL.bit.SOCASEL = ET_CTR_PRDZERO;           // CTR = 0
+        EPwm4Regs.ETPS.bit.SOCAPRD = ET_2ND;                // Generate pulse on 2nd event
+        EPwm4Regs.ETCLR.bit.SOCA = 1;
+        EPwm4Regs.ETPS.bit.SOCACNT = ET_2ND;
+
+        // Enable CNT_zero interrupt using EPWM4 Time-base
+        EPwm4Regs.ETSEL.bit.INTEN = 1;                      // enable EPWM4INT generation
+        EPwm4Regs.ETSEL.bit.INTSEL = ET_CTR_PRDZERO;        // enable interrupt CNT_zero event
+        EPwm4Regs.ETPS.bit.INTPRD = ET_2ND;                 // generate interrupt on the 2nd event
+        EPwm4Regs.ETPS.bit.INTCNT = ET_2ND;
+        EPwm4Regs.ETCLR.bit.INT = 1;
+
     #endif
 
-    EPwm4Regs.ETPS.bit.SOCAPRD = ET_1ST;
-    EPwm4Regs.ETCLR.bit.SOCA = 1;
-    EPwm4Regs.ETPS.bit.SOCACNT = ET_1ST;
-
-    // Enable CNT_zero interrupt using EPWM4 Time-base
-    EPwm4Regs.ETSEL.bit.INTEN = 1;
-    EPwm4Regs.ETSEL.bit.INTSEL = ET_CTR_ZERO;
-    EPwm4Regs.ETPS.bit.INTPRD = ET_1ST;
-    EPwm4Regs.ETPS.bit.INTCNT = ET_1ST;
-    EPwm4Regs.ETCLR.bit.INT = 1;
-
-    EDIS;
+        EDIS;
 
     #endif
 
@@ -1666,7 +1686,7 @@ int main(void)
 
         if(START_FLC == 1 || e_FLC_Sts == FLC_ON)
         {
-            #if(BUILDLEVEL == LEVEL1 ||BUILDLEVEL == LEVEL2|| BUILDLEVEL == LEVEL3 || BUILDLEVEL == LEVEL4||BUILDLEVEL == LEVEL5||BUILDLEVEL == LEVEL6||BUILDLEVEL == LEVEL7||BUILDLEVEL == LEVEL8)
+            #if(BUILDLEVEL == LEVEL1 || BUILDLEVEL == LEVEL2 || BUILDLEVEL == LEVEL3 || BUILDLEVEL == LEVEL4 || BUILDLEVEL == LEVEL5 || BUILDLEVEL == LEVEL6 || BUILDLEVEL == LEVEL7 || BUILDLEVEL == LEVEL8)
                 CpuToCLA.EnableFlag = 1;
             #endif
         }
@@ -1756,7 +1776,7 @@ int main(void)
         {
             ClrPrtFlg = 1;
             RunTask8Flag = 1;
-            UpdateProtectValue();
+//            UpdateProtectValue();
             seconds_counter_cmpss = 0;
             FLC_RstFlg = 0;
         }
@@ -1837,22 +1857,9 @@ int main(void)
 
         #if(ALLOW_IPC_CPU == 1)
 
-//            if (START_TPC == 1)
-//            {
-//                IpcRegs.IPCSENDDATA = 1;
-//                IpcRegs.IPCSET.bit.IPC0 = 1;
-//                while (IpcRegs.IPCFLG.bit.IPC0 == 1);
-//            }
-//            else
-//            {
-//                IpcRegs.IPCSENDDATA = 0;
-//                IpcRegs.IPCSET.bit.IPC0 = 1;
-//                while (IpcRegs.IPCFLG.bit.IPC0 == 1);
-//            }
-
             for(j = 0; j < 10; j++)
             {
-            data_TPC_u16[j] = 0;
+                data_TPC_u16[j] = 0;
             }
 
             IpcRegs.IPCSET.bit.IPC0 = 1;

@@ -195,5 +195,6 @@ typedef struct
     unsigned int Udc_under_modulation;
 
 }PROTECT_CHANEL;
+
 #endif
  /* _PV_VARIABLES_H_ */

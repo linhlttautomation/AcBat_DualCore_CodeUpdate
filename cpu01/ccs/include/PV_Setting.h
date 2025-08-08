@@ -39,7 +39,7 @@
 #define READ_OUTPUT_CURRENT_CONTROLLER     6
 
 // ---------------------------------------------------
-#define SET_MODE_READ           READ_VOLTAGE_AC_AFTER_LPF
+#define SET_MODE_READ           READ_CURRENT
 // ---------------------------------------------------
 
 // ---------------------------------------------------
@@ -70,9 +70,10 @@
 #define ADC_TRIGGER_PRD             2
 #define ADC_TRIGGER_CMPB            3
 #define ADC_TRIGGER_CMPA            4
+#define ADC_TRIGGER_ZERO_PRD        5
 
 // ---------------------------------------------------
-#define ADC_TRIGGER_MODE            ADC_TRIGGER_ZERO
+#define ADC_TRIGGER_MODE            ADC_TRIGGER_ZERO_PRD
 // ---------------------------------------------------
 
 #if(BUILDLEVEL == LEVEL4)

@@ -310,12 +310,6 @@ int main(void)
 
     while(1)
     {
-//        if (IpcRegs.IPCSTS.bit.IPC0 == 1)
-//        {
-//            START_TPC = IpcRegs.IPCRECVDATA;
-//            IpcRegs.IPCACK.bit.IPC0 = 1;
-//        }
-
         if(IpcRegs.IPCSTS.bit.IPC0 == 1)
         {
             for(j = 0; j < 10; j++)
